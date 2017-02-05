@@ -95,6 +95,10 @@ end
 
 -- collision handling
 function Player:onCollision(obj, colliding_side)
+--     print("=====")
+--     for _, v in pairs(self.vertices) do
+--         print(v)
+--     end
     if obj:is(Prey) then
         print("tasty!")
         -- slow down if we eat something
