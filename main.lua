@@ -2,8 +2,8 @@ function love.load()
     Object = require "lib.classic"
     Camera = require "lib.hump.camera"
     vector = require "lib.hump.vector"
-    require "collider"
-    require "triangle"
+    require "colliders.collider"
+    require "colliders.rectangle_collider"
     require "collision_handler"
     require "obstacle"
     require "player"
@@ -42,7 +42,7 @@ function love.load()
     obstacles[Obstacle("assets/ground_test.png", 768, 192, 256, 352)] = true
 
     -- triangles?
-    obstacles[Triangle(vector(1024, 128), vector(1280, 0), vector(1280, 128))] = true
+    -- obstacles[Triangle(vector(1024, 128), vector(1280, 0), vector(1280, 128))] = true
 
     -- survivors
     prey = {}

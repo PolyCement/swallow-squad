@@ -1,5 +1,5 @@
 -- tasty!
-Prey = Collider:extend()
+Prey = RectangleCollider:extend()
 
 function Prey:new(image, x, y)
     -- will this work if dimensions aren't given? lets find out lol

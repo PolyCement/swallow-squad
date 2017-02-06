@@ -27,45 +27,52 @@ side = {
 -- execute the callback function of any colliding objects
 -- returns the x and y coords of the position the object would end up at
 -- todo: unfuck this for triangles
--- i think i need to alter the resulting x and y using the normal somehow?
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
 function CollisionHandler:checkCollision(obj, delta)
-    local desired_pos = vector(obj.x, obj.y) + delta
+    local desired_pos = obj.vertices[1] + delta
     local resulting_pos = desired_pos
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
         -- shifted clones
-        local shifted_obj_x = obj:cloneAt(desired_pos.x, obj.y)
-        local shifted_obj_y = obj:cloneAt(obj.x, desired_pos.y)
+        local shifted_obj_x = obj:cloneAt(desired_pos.x, obj.vertices[1].y)
+        local shifted_obj_y = obj:cloneAt(obj.vertices[1].x, desired_pos.y)
+        if collider.vertices[3].x == 4096 then
+            print("x", shifted_obj_x.vertices[1])
+            print("y", shifted_obj_y.vertices[1])
+        end
         -- check for a collision at the new x position
         if checkCollision(shifted_obj_x, collider) then
             -- figure out where the collision actually happened
             -- if we're heading right we hit our right side
             if delta.x > 0 then
                 if collider:isSolid() then
-                    resulting_pos.x = collider.x - obj.width
+                    local width = obj.vertices[3].x - obj.vertices[1].x
+                    resulting_pos.x = collider.vertices[1].x - width
                 end
                 colliding_side = side.right
             -- else, we've hit our left side
             else
                 if collider:isSolid() then
-                    resulting_pos.x = collider.x + collider.width
+                    resulting_pos.x = collider.vertices[3].x
                 end
                 colliding_side = side.left
+                print("yea its this shit again")
             end
         -- check y collision
         elseif checkCollision(shifted_obj_y, collider) then
             -- if we're heading down we've hit our bottom
             if delta.y > 0 then
                 if collider:isSolid() then
-                    resulting_pos.y = collider.y - obj.height
+                    local height = obj.vertices[3].y - obj.vertices[1].y
+                    resulting_pos.y = collider.vertices[1].y - height
                 end
                 colliding_side = side.bottom
+                print("hit my bottom")
             -- else, we've hit our top
             else
                 if collider:isSolid() then
-                    resulting_pos.y = collider.y + collider.height
+                    resulting_pos.y = collider.vertices[3].y
                 end
                 colliding_side = side.top
             end
@@ -76,36 +83,13 @@ function CollisionHandler:checkCollision(obj, delta)
             collider:onCollision(obj, -colliding_side)
         end
     end
-    return resulting_pos
+    return resulting_pos - obj.vertices[1]
 end
 
--- checks collision between 2 aabbs, or an aabb and an axis-aligned triangle
--- todo: take both colliders
--- heyyyy why is this returning true every single time
+-- checks collision between 2 colliders
 function checkCollision(a, b)
-    -- check overlap in x axis
-    local a_left = a.x
-    local a_right = a.x + a.width
-    local b_left = b.x
-    local b_right = b.x + b.width
-
-    if not (a_right > b_left and a_left < b_right) then
-        return false
-    end
-
-    -- check overlap in y axis
-    local a_top = a.y
-    local a_bottom = a.y + a.height
-    local b_top = b.y
-    local b_bottom = b.y + b.height
-
-    if not (a_bottom > b_top and a_top < b_bottom) then
-        return false
-    end
-
-    -- check overlap along third axis (hypotenuse) for triangles
-    if b:is(Triangle) then
-        local axis = b.normal
+    for _, v in pairs(a.edges) do
+        local axis = v.direction:perpendicular()
         local a_, b_ = project(a, axis), project(b, axis)
         if not overlap(a_, b_) then
             return false
@@ -116,11 +100,11 @@ end
 
 -- takes an object and an axis to project onto (ie. the hypotenuse of a triangle)
 function project(a, axis)
-    --find the min and max projection values, take those as the ends of our projection
+    -- find the min and max projection values, take those as the ends of our projection
     local vertices = a:getVertices()
     local min = vertices[1] * axis
     local max = min
-    for i, v in ipairs(vertices) do
+    for _, v in pairs(vertices) do
         local proj = v * axis
         if proj < min then min = proj end
         if proj > max then max = proj end
@@ -136,7 +120,10 @@ function contains(n, range)
         a = b
         b = range[1]
     end
-    return n >= a and n <= b
+    -- adjusted this to work with the way im dealing with collisions rn
+    -- try reverting this line once i've made push vectors work
+    -- return n >= a and n <= b
+    return n > a and n < b
 end
 
 -- check if 2 projections overlap

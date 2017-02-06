@@ -1,9 +1,10 @@
 -- rrerr
-Player = Collider:extend()
+Player = RectangleCollider:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
     Player.super.new(self, x, y, 48, 112)
+    self.width = self.vertices[3].x - self.vertices[1].x
     -- velocity
     self.velocity = {x = 0, y = 0}
     -- sprite
@@ -129,7 +130,7 @@ function Player:accelerate(a)
 end
 
 function Player:getPos()
-    return self.x, self.y
+    return self.vertices[1]:unpack()
 end
 
 function Player:__tostring()

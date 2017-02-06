@@ -1,6 +1,6 @@
 -- this should be used to define bits of scenery that we can collide with
 -- YES THAT INCLUDES THE GROUND
-Obstacle = Collider:extend()
+Obstacle = RectangleCollider:extend()
 
 function Obstacle:new(image, x, y, width, height)
     Obstacle.super.new(self, x, y, width, height)
