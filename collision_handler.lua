@@ -27,6 +27,8 @@ side = {
 -- execute the callback function of any colliding objects
 -- returns the x and y coords of the position the object would end up at
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
+-- todo: a better way of checking what side of the player made contact
+-- presumably i can use the mtb for this? could i just check its rotation??
 function CollisionHandler:checkCollision(obj, delta)
     local desired_pos = obj.vertices[1] + delta
     local resulting_pos = desired_pos
