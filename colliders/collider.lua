@@ -25,7 +25,7 @@ function Collider:new(solid, ...)
     end
     -- convert coords to vectors
     self.vertices = {...}
-    -- create edges (todo: a loop)
+    -- create edges
     self.edges = {}
     for i = 1, #self.vertices do
         table.insert(self.edges, Segment(self.vertices[i], self.vertices[1+i%(#self.vertices)]))
@@ -89,6 +89,15 @@ function Collider:cloneAt(x, y)
         table.insert(new_vertices, v + delta)
     end
     return Collider(self.solid, unpack(new_vertices))
+end
+
+-- this only works for rectangles and triangles
+-- so, uh, only use those?
+function Collider:getCenter()
+    if #self.vertices == 3 then
+        return (self.vertices[1] + self.vertices[2] + self.vertices[3]) / 3
+    end
+    return (self.vertices[1] + self.vertices[3]) / 2
 end
 
 function Collider:__tostring()

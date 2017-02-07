@@ -41,6 +41,11 @@ function Sprite:setPos(x, y)
     self.y = y
 end
 
+function Sprite:move(dx, dy)
+    self.x = self.x + dx
+    self.y = self.y + dy
+end
+
 -- flip the image about x + width/2
 -- ok but what if instead of passing width here i gave the sprite a pivot axis in its constructor
 -- passing width seems really odd? shouldn't the sprite know the axis it should mirror over???

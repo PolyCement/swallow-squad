@@ -26,7 +26,6 @@ side = {
 -- check for collisions
 -- execute the callback function of any colliding objects
 -- returns the x and y coords of the position the object would end up at
--- todo: unfuck this for triangles
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
 function CollisionHandler:checkCollision(obj, delta)
     local desired_pos = obj.vertices[1] + delta
@@ -37,43 +36,37 @@ function CollisionHandler:checkCollision(obj, delta)
         -- shifted clones
         local shifted_obj_x = obj:cloneAt(desired_pos.x, obj.vertices[1].y)
         local shifted_obj_y = obj:cloneAt(obj.vertices[1].x, desired_pos.y)
-        if collider.vertices[3].x == 4096 then
-            print("x", shifted_obj_x.vertices[1])
-            print("y", shifted_obj_y.vertices[1])
-        end
         -- check for a collision at the new x position
-        if checkCollision(shifted_obj_x, collider) then
+        -- does this still need to be 2 parts?
+        local colliding_x, mtb_x = checkCollision(shifted_obj_x, collider)
+        local colliding_y, mtb_y = checkCollision(shifted_obj_y, collider)
+        if colliding_x then
+            if collider:isSolid() then
+                print(mtb_x)
+                resulting_pos = resulting_pos + mtb_x
+            end
             -- figure out where the collision actually happened
+            -- todo: fix how this works with triangles
             -- if we're heading right we hit our right side
             if delta.x > 0 then
-                if collider:isSolid() then
-                    local width = obj.vertices[3].x - obj.vertices[1].x
-                    resulting_pos.x = collider.vertices[1].x - width
-                end
                 colliding_side = side.right
+                print("hit my front")
             -- else, we've hit our left side
             else
-                if collider:isSolid() then
-                    resulting_pos.x = collider.vertices[3].x
-                end
                 colliding_side = side.left
-                print("yea its this shit again")
             end
         -- check y collision
-        elseif checkCollision(shifted_obj_y, collider) then
+        elseif colliding_y then
+            if collider:isSolid() then
+                print(mtb_y)
+                resulting_pos = resulting_pos + mtb_y
+            end
             -- if we're heading down we've hit our bottom
             if delta.y > 0 then
-                if collider:isSolid() then
-                    local height = obj.vertices[3].y - obj.vertices[1].y
-                    resulting_pos.y = collider.vertices[1].y - height
-                end
-                colliding_side = side.bottom
                 print("hit my bottom")
+                colliding_side = side.bottom
             -- else, we've hit our top
             else
-                if collider:isSolid() then
-                    resulting_pos.y = collider.vertices[3].y
-                end
                 colliding_side = side.top
             end
         end
@@ -88,14 +81,41 @@ end
 
 -- checks collision between 2 colliders
 function checkCollision(a, b)
+    -- track all potential push vectors
+    local push_vectors = {}
     for _, v in pairs(a.edges) do
-        local axis = v.direction:perpendicular()
+        -- this sure looks like it should be a function
+        -- normalise the normal or the depth calculation gets screwed up
+        local axis = v.direction:perpendicular():normalized()
         local a_, b_ = project(a, axis), project(b, axis)
         if not overlap(a_, b_) then
             return false
         end
+        -- calculate overlap between projections
+        local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
+        -- convert axis to push vector
+        axis = axis:normalized() * depth
+        table.insert(push_vectors, axis)
     end
-    return true
+    for _, v in pairs(b.edges) do
+        local axis = v.direction:perpendicular():normalized()
+        local a_, b_ = project(a, axis), project(b, axis)
+        if not overlap(a_, b_) then
+            return false
+        end
+        -- calculate overlap between projections
+        local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
+        -- convert axis to push vector
+        axis = axis:normalized() * depth
+        table.insert(push_vectors, axis)
+    end
+    local mtb = findMTB(push_vectors)
+    -- make sure the mtb is pushing a's centre away from b's centre
+    local d = a:getCenter() - b:getCenter()
+    if (d * mtb) < 0 then
+        mtb = -mtb
+    end
+    return true, mtb
 end
 
 -- takes an object and an axis to project onto (ie. the hypotenuse of a triangle)
@@ -138,4 +158,15 @@ function overlap(a_, b_)
         return true
     end
     return false
+end
+
+function findMTB(push_vectors)
+    local mtb = push_vectors[1]
+    for _, v in pairs(push_vectors) do
+        -- i dont think math.pow will work on vectors,
+        if v * v < mtb * mtb then
+            mtb = v
+        end
+    end
+    return mtb
 end

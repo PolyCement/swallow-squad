@@ -8,7 +8,7 @@ function Player:new(x, y)
     -- velocity
     self.velocity = {x = 0, y = 0}
     -- sprite
-    self.sprite = Sprite("assets/swallow_16.png", self.x, self.y, nil, nil, 64, 8)
+    self.sprite = Sprite("assets/swallow_16.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 8)
     -- speed stuff
     self.maxSpeed = 12*meter
     local min_speed = self.maxSpeed/3
@@ -75,7 +75,7 @@ function Player:update(dt)
     self:move(dx, dy)
 
     -- update sprite position
-    self.sprite:setPos(self.x, self.y)
+    self.sprite:setPos(self.vertices[1]:unpack())
 end
 
 function Player:draw()
