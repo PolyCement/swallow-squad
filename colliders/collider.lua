@@ -12,6 +12,14 @@ function Segment:new(a, b)
     self.direction = b - a
 end
 
+-- should probably remove this once im done debugging
+function Segment:__tostring()
+    local a_string = tostring(self.a)
+    local b_string = tostring(self.b)
+    local dir_string = tostring(self.direction)
+    return "Segment(" .. a_string .. ", " .. b_string .. ", " .. dir_string .. ")"
+end
+
 -- todo: just call it a polygon or somethin
 Collider = Object:extend()
 
@@ -55,12 +63,11 @@ end
 -- attempt to move by the requested amount, go where we can
 function Collider:move(dx, dy)
     local delta = collisionHandler:checkCollision(self, vector(dx, dy))
-    -- do i actually need to update these?
-    -- in theory the vectors should update themselves... shouldn't they?
-    -- they're tables after all
     for i, v in pairs(self.vertices) do
         self.vertices[i] = v + delta
     end
+    -- technically we don't need to update these since the direction is the only
+    -- bit we actually use, and since we don't support rotation that doesn't change
     for i, v in pairs(self.edges) do
         v.a = v.a + delta
         v.b = v.b + delta
@@ -91,13 +98,14 @@ function Collider:cloneAt(x, y)
     return Collider(self.solid, unpack(new_vertices))
 end
 
--- this only works for rectangles and triangles
--- so, uh, only use those?
+-- calculate the centre of the polygon
 function Collider:getCenter()
-    if #self.vertices == 3 then
-        return (self.vertices[1] + self.vertices[2] + self.vertices[3]) / 3
+    local num_vertices = #self.vertices
+    local total = self.vertices[1]
+    for i = 2, num_vertices do
+        total = total + self.vertices[i]
     end
-    return (self.vertices[1] + self.vertices[3]) / 2
+    return total/num_vertices
 end
 
 function Collider:__tostring()

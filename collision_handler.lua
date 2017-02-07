@@ -29,6 +29,7 @@ side = {
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
 -- todo: a better way of checking what side of the player made contact
 -- presumably i can use the mtb for this? could i just check its rotation??
+-- update: the side we hit isn't the only problem
 function CollisionHandler:checkCollision(obj, delta)
     local desired_pos = obj.vertices[1] + delta
     local resulting_pos = desired_pos
