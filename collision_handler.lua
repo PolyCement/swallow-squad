@@ -1,15 +1,16 @@
--- maybe this should be renamed CollisionDetector since the collider itself handles the collision
+-- handles collisions
 CollisionHandler = Object:extend()
 
 function CollisionHandler:new()
     self.colliders = {}
 end
 
+-- add a collider
 function CollisionHandler:add(collider)
     self.colliders[collider] = true
 end
 
--- haha don't worry about it fam :)
+-- remove a collider
 function CollisionHandler:remove(collider)
     self.colliders[collider] = nil
 end
@@ -23,54 +24,42 @@ side = {
     right = -2 
 }
 
--- check for collisions
+-- check for collisions at the position we end up at with the given delta
 -- execute the callback function of any colliding objects
--- returns the x and y coords of the position the object would end up at
+-- returns the actual delta achieved
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
--- todo: a better way of checking what side of the player made contact
--- presumably i can use the mtb for this? could i just check its rotation??
--- update: the side we hit isn't the only problem
 function CollisionHandler:checkCollision(obj, delta)
     local desired_pos = obj.vertices[1] + delta
     local resulting_pos = desired_pos
+    -- create a shifted clone
+    local shifted_obj = obj:cloneAt(desired_pos:unpack())
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
-        -- shifted clones
-        local shifted_obj_x = obj:cloneAt(desired_pos.x, obj.vertices[1].y)
-        local shifted_obj_y = obj:cloneAt(obj.vertices[1].x, desired_pos.y)
-        -- check for a collision at the new x position
-        -- does this still need to be 2 parts?
-        local colliding_x, mtb_x = checkCollision(shifted_obj_x, collider)
-        local colliding_y, mtb_y = checkCollision(shifted_obj_y, collider)
-        if colliding_x then
+        -- check for a collision at the new position
+        local colliding, mtd = checkCollision(shifted_obj, collider)
+        if colliding then
             if collider:isSolid() then
-                print(mtb_x)
-                resulting_pos = resulting_pos + mtb_x
+                resulting_pos = resulting_pos + mtd
             end
-            -- figure out where the collision actually happened
-            -- todo: fix how this works with triangles
-            -- if we're heading right we hit our right side
-            if delta.x > 0 then
-                colliding_side = side.right
-                print("hit my front")
-            -- else, we've hit our left side
+            -- maybe this should be in player
+            -- figure out which axis we're being pushed in hardest
+            if math.abs(mtd.x) > math.abs(mtd.y) then
+                -- if we're being pushed left we hit our right side
+                if mtd.x < 0 then
+                    colliding_side = side.right
+                -- else, we've hit our left side
+                else
+                    colliding_side = side.left
+                end
             else
-                colliding_side = side.left
-            end
-        -- check y collision
-        elseif colliding_y then
-            if collider:isSolid() then
-                print(mtb_y)
-                resulting_pos = resulting_pos + mtb_y
-            end
-            -- if we're heading down we've hit our bottom
-            if delta.y > 0 then
-                print("hit my bottom")
-                colliding_side = side.bottom
-            -- else, we've hit our top
-            else
-                colliding_side = side.top
+                -- if we're being pushed up we hit our bottom
+                if mtd.y < 0 then
+                    colliding_side = side.bottom
+                -- else, we've hit our top side
+                else
+                    colliding_side = side.top
+                end
             end
         end
         if colliding_side then
@@ -112,13 +101,13 @@ function checkCollision(a, b)
         axis = axis:normalized() * depth
         table.insert(push_vectors, axis)
     end
-    local mtb = findMTB(push_vectors)
-    -- make sure the mtb is pushing a's centre away from b's centre
+    local mtd = findMTD(push_vectors)
+    -- make sure the mtd is pushing a's centre away from b's centre
     local d = a:getCenter() - b:getCenter()
-    if (d * mtb) < 0 then
-        mtb = -mtb
+    if (d * mtd) < 0 then
+        mtd = -mtd
     end
-    return true, mtb
+    return true, mtd
 end
 
 -- takes an object and an axis to project onto (ie. the hypotenuse of a triangle)
@@ -151,25 +140,23 @@ end
 
 -- check if 2 projections overlap
 function overlap(a_, b_)
-    if contains(a_[1], b_) then
-        return true
-    elseif contains(a_[2], b_) then
-        return true
-    elseif contains(b_[1], a_) then
-        return true
-    elseif contains(b_[2], a_) then
+    if contains(a_[1], b_) or
+       contains(a_[2], b_) or
+       contains(b_[1], a_) or
+       contains(b_[2], a_) then
         return true
     end
     return false
 end
 
-function findMTB(push_vectors)
-    local mtb = push_vectors[1]
+-- find minimum translation distance
+function findMTD(push_vectors)
+    local mtd = push_vectors[1]
     for _, v in pairs(push_vectors) do
         -- i dont think math.pow will work on vectors,
-        if v * v < mtb * mtb then
-            mtb = v
+        if v * v < mtd * mtd then
+            mtd = v
         end
     end
-    return mtb
+    return mtd
 end
