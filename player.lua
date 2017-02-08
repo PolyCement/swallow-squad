@@ -110,7 +110,13 @@ function Player:onCollision(obj, colliding_side)
         self.acceleration = self.acceleration - self.accPenalty
         -- change sprite when we're full
         if self.fullness >= 12 then
-            self.sprite = Sprite("assets/swallow_full.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+            self:updateSprite("assets/swallow_fullest.png")
+        elseif self.fullness >= 9 then
+            self:updateSprite("assets/swallow_fullerer.png")
+        elseif self.fullness >= 6 then
+            self:updateSprite("assets/swallow_fuller.png")
+        elseif self.fullness >= 3 then
+            self:updateSprite("assets/swallow_full.png")
         end
     end
     if obj:isSolid() then
@@ -126,6 +132,14 @@ function Player:onCollision(obj, colliding_side)
         elseif colliding_side == side.left or colliding_side == side.right then
             self.velocity.x = 0
         end
+    end
+end
+
+function Player:updateSprite(new_sprite)
+    local is_mirrored = self.sprite:isMirrored()
+    self.sprite = Sprite(new_sprite, self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+    if is_mirrored then
+        self.sprite:flip(self.width)
     end
 end
 
