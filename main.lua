@@ -51,7 +51,7 @@ function love.load()
     -- survivors
     prey = {}
     for idx = 1, 12 do
-        prey[Prey("assets/prey_wolf_16.png", 256 + 16 * idx, 512)] = true
+        prey[Prey("assets/prey_wolf.png", 256 + 16 * idx, 512)] = true
     end
 
     -- toggles drawing of colliders

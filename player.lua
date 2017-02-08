@@ -3,16 +3,18 @@ Player = RectangleCollider:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
-    Player.super.new(self, x, y, 48, 112)
+    Player.super.new(self, x, y, 48, 128)
     self.width = self.vertices[3].x - self.vertices[1].x
     -- velocity
     self.velocity = {x = 0, y = 0}
     -- sprite
-    self.sprite = Sprite("assets/swallow_16.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 8)
+    self.sprite = Sprite("assets/swallow_empty.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+    -- how many people's worth of weight we're carrying
+    self.fullness = 0
+    local max_capacity = 12
     -- speed stuff
     self.maxSpeed = 12*meter
     local min_speed = self.maxSpeed/3
-    local max_capacity = 12
     self.speedPenalty = (self.maxSpeed - min_speed)/max_capacity
     -- acceleration stuff
     self.acceleration = 8*meter
@@ -96,16 +98,20 @@ end
 
 -- collision handling
 function Player:onCollision(obj, colliding_side)
---     print("=====")
---     for _, v in pairs(self.vertices) do
---         print(v)
---     end
+    -- u r now entering the vore zone
     if obj:is(Prey) then
         print("tasty!")
+        -- once the taur is in this will need to ask the prey how much it weighs
+        -- wow that looks a lot weirder written down than it sounded in my head
+        self.fullness = self.fullness + 1
         -- slow down if we eat something
         self.maxSpeed = self.maxSpeed - self.speedPenalty
         self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
         self.acceleration = self.acceleration - self.accPenalty
+        -- change sprite when we're full
+        if self.fullness >= 12 then
+            self.sprite = Sprite("assets/swallow_full.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+        end
     end
     if obj:isSolid() then
         if colliding_side == side.bottom then
