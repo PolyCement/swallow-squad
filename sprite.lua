@@ -28,6 +28,10 @@ function Sprite:draw()
                        self.scaleX, 1, self.offsetX, self.offsetY)
 end
 
+-- AnimatedSprite overrides this, its useless here tho
+function Sprite:update(dt)
+end
+
 function Sprite:getWidth()
     return self.width 
 end

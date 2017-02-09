@@ -2,12 +2,14 @@ function love.load()
     Object = require "lib.classic"
     Camera = require "lib.hump.camera"
     vector = require "lib.hump.vector"
+    anim8 = require "lib.anim8"
     require "collision_handler"
     require "colliders.collider"
     require "colliders.rectangle_collider"
     require "player"
     require "prey"
     require "sprite"
+    require "animated_sprite"
 
     -- pixels per meter
     -- use this to attempt to specify things in meters rather than pixels

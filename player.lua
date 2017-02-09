@@ -8,7 +8,7 @@ function Player:new(x, y)
     -- velocity
     self.velocity = {x = 0, y = 0}
     -- sprite
-    self.sprite = Sprite("assets/swallow_empty.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+    self.sprite = AnimatedSprite("assets/swallow_empty.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     local max_capacity = 12
@@ -34,11 +34,13 @@ function Player:update(dt)
     if self.landed then
         -- if we're touching the ground, accelerate
         if love.keyboard.isDown("left") then
+            self.sprite:resume()
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
                 self.sprite:flip(self.width)
             end
         elseif love.keyboard.isDown("right") then
+            self.sprite:resume()
             self:accelerate(self.acceleration*dt)
             if self.sprite:isMirrored() then
                 self.sprite:flip(self.width)
@@ -53,9 +55,13 @@ function Player:update(dt)
                 -- no jigglin
                 self.velocity.x = 0
             end
+            -- NO JIGGLIN
+            self.sprite:stop()
         end
         self.landed = false -- always assume we're not touching the ground
     else
+        -- hi this should play a wing flapping animation but i dont have one so it just, stops
+        self.sprite:pause()
         -- while airbourne, allow the player to influence their speed a little
         if love.keyboard.isDown("left") then
             self:accelerate(-self.acceleration*dt)
@@ -76,7 +82,8 @@ function Player:update(dt)
     -- attempt to move
     self:move(dx, dy)
 
-    -- update sprite position
+    -- update sprite
+    self.sprite:update(dt)
     self.sprite:setPos(self.vertices[1]:unpack())
 end
 
