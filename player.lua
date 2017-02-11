@@ -5,14 +5,14 @@ Player = RectangleCollider:extend()
 function Player:new(x, y)
     Player.super.new(self, x, y, 48, 128)
     self.width = 48
-    -- velocity
-    self.velocity = vector(0, 0)
     -- sprite
-    self.sprite = AnimatedSprite("assets/swallow_empty.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+    self.sprite = AnimatedSprite("assets/swallow_empty.png",
+                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     local max_capacity = 12
     -- speed stuff
+    self.velocity = vector(0, 0)
     self.maxSpeed = 12*meter
     local min_speed = self.maxSpeed/3
     self.speedPenalty = (self.maxSpeed - min_speed)/max_capacity
@@ -21,8 +21,10 @@ function Player:new(x, y)
     local min_acceleration = self.acceleration/3
     self.accPenalty = (self.acceleration - min_acceleration)/max_capacity
     -- jump stuff
+    -- i gotta figure out how to make this work based on height rather than speed
     self.jumpSpeed = 14*meter
-    local min_jump_speed = self.jumpSpeed/2
+    print(self.jumpSpeed)
+    local min_jump_speed = self.jumpSpeed*.75
     self.jumpSpeedPenalty = (self.jumpSpeed - min_jump_speed)/max_capacity
     self.maxJumps = 2
     self.jumpsLeft = self.maxJumps
@@ -110,6 +112,7 @@ function Player:onCollision(obj, colliding_side)
         -- slow down if we eat something
         self.maxSpeed = self.maxSpeed - self.speedPenalty
         self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
+        print(self.jumpSpeed)
         self.acceleration = self.acceleration - self.accPenalty
         -- change sprite when we're full
         -- commented out because it makes the game crash!!!

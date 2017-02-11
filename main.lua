@@ -70,7 +70,7 @@ function love.draw()
     -- draw the bg before attaching the camera to give a skybox effect
     bg:draw()
     camera:attach()
-    -- draw all world
+    -- draw world geometry
     for o, _ in pairs(world) do
         o:draw()
     end

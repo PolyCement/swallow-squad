@@ -26,18 +26,17 @@ side = {
 
 -- check for collisions at the position we end up at with the given delta
 -- execute the callback function of any colliding objects
--- returns the actual delta achieved
--- note: this will absolutely fuck up if we collide with multiple objects on a single axis
+-- returns the delta resulting from collisions with the environment
 function CollisionHandler:checkCollision(obj, delta)
-    local total_delta = vector(0, 0)
+    local correction_delta = vector(0, 0)
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
         -- check for a collision at the new position
-        local colliding, mtd = checkCollision(obj, collider)
-        if colliding then
+        local mtd = checkCollision(obj, collider)
+        if mtd then
             if collider:isSolid() then
-                total_delta = total_delta + mtd
+                correction_delta = correction_delta + mtd
             end
             -- maybe this should be in player
             -- figure out which axis we're being pushed in hardest
@@ -65,38 +64,26 @@ function CollisionHandler:checkCollision(obj, delta)
             collider:onCollision(obj, -colliding_side)
         end
     end
-    return total_delta
+    return correction_delta
 end
 
--- checks collision between 2 colliders
+-- checks if the given colliders are, uh, colliding
 function checkCollision(a, b)
     -- track all potential push vectors
     local push_vectors = {}
     for _, v in pairs(a.edges) do
-        -- this sure looks like it should be a function
-        -- normalise the normal or the depth calculation gets screwed up
-        local axis = v.direction:perpendicular():normalized()
-        local a_, b_ = project(a, axis), project(b, axis)
-        if not overlap(a_, b_) then
-            return false
+        local push_vector = checkCollisionInAxis(v.normal, a, b)
+        if not push_vector then
+            return nil
         end
-        -- calculate overlap between projections
-        local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
-        -- convert axis to push vector
-        axis = axis:normalized() * depth
-        table.insert(push_vectors, axis)
+        table.insert(push_vectors, push_vector)
     end
     for _, v in pairs(b.edges) do
-        local axis = v.direction:perpendicular():normalized()
-        local a_, b_ = project(a, axis), project(b, axis)
-        if not overlap(a_, b_) then
-            return false
+        local push_vector = checkCollisionInAxis(v.normal, a, b)
+        if not push_vector then
+            return nil
         end
-        -- calculate overlap between projections
-        local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
-        -- convert axis to push vector
-        axis = axis:normalized() * depth
-        table.insert(push_vectors, axis)
+        table.insert(push_vectors, push_vector)
     end
     local mtd = findMTD(push_vectors)
     -- make sure the mtd is pushing a's centre away from b's centre
@@ -104,10 +91,22 @@ function checkCollision(a, b)
     if (d * mtd) < 0 then
         mtd = -mtd
     end
-    return true, mtd
+    return mtd
 end
 
--- takes an object and an axis to project onto (ie. the hypotenuse of a triangle)
+-- check for a collision in the given axis
+function checkCollisionInAxis(axis, a, b)
+    local a_, b_ = project(a, axis), project(b, axis)
+    if not overlap(a_, b_) then
+        return nil
+    end
+    -- calculate overlap between projections
+    local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
+    -- convert axis to push vector
+    return axis:normalized() * depth
+end
+
+-- takes an object and an axis to project onto
 function project(a, axis)
     -- find the min and max projection values, take those as the ends of our projection
     local vertices = a:getVertices()
@@ -125,13 +124,10 @@ end
 function contains(n, range)
     local a, b = range[1], range[2]
     -- make sure a is smaller than b
-    if b < a then
+    if range[2] < range[1] then
         a = b
         b = range[1]
     end
-    -- adjusted this to work with the way im dealing with collisions rn
-    -- try reverting this line once i've made push vectors work
-    -- return n >= a and n <= b
     return n > a and n < b
 end
 
@@ -150,7 +146,6 @@ end
 function findMTD(push_vectors)
     local mtd = push_vectors[1]
     for _, v in pairs(push_vectors) do
-        -- i dont think math.pow will work on vectors,
         if v * v < mtd * mtd then
             mtd = v
         end

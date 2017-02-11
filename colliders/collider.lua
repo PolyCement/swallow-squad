@@ -8,6 +8,7 @@ function Segment:new(a, b)
     self.a = a
     self.b = b
     self.direction = b - a
+    self.normal = self.direction:perpendicular():normalized()
 end
 
 -- should probably remove this once im done debugging
