@@ -32,21 +32,21 @@ function love.load()
     local level_width = 4096
 
     -- define level geometry
-    obstacles = {}
+    world = {}
     -- this one is the floor
-    obstacles[RectangleCollider(0, 544, level_width, 512, true)] = true
+    world[RectangleCollider(0, 544, level_width, 512, true)] = true
     -- these aren't the floor
-    obstacles[RectangleCollider(640, 416, 128, 128, true)] = true
-    obstacles[RectangleCollider(128, 288, 256, 64, true)] = true
-    obstacles[RectangleCollider(128, 288, 256, 64, true)] = true
-    obstacles[RectangleCollider(1024, 128, 256, 544, true)] = true
-    obstacles[RectangleCollider(896, 128, 128, 64, true)] = true
-    obstacles[RectangleCollider(768, 192, 256, 352, true)] = true
+    world[RectangleCollider(640, 416, 128, 128, true)] = true
+    world[RectangleCollider(128, 288, 256, 64, true)] = true
+    world[RectangleCollider(128, 288, 256, 64, true)] = true
+    world[RectangleCollider(1024, 128, 256, 544, true)] = true
+    world[RectangleCollider(896, 128, 128, 64, true)] = true
+    world[RectangleCollider(768, 192, 256, 352, true)] = true
     -- triangles?
-    obstacles[Collider(true, vector(1024, 128), vector(1280, 0), vector(1280, 128))] = true
+    world[Collider(true, vector(1024, 128), vector(1280, 0), vector(1280, 128))] = true
 
     -- register level geometry with collision handler
-    for v, _ in pairs(obstacles) do
+    for v, _ in pairs(world) do
         collisionHandler:add(v)
     end
 
@@ -63,16 +63,15 @@ end
 function love.update(dt)
     player:update(dt)
     -- have the camera follow the player
-    local x, y = player:getPos()
-    camera:lookAt(x, y)
+    camera:lookAt(player:getPos():unpack())
 end
 
 function love.draw()
     -- draw the bg before attaching the camera to give a skybox effect
     bg:draw()
     camera:attach()
-    -- draw all obstacles
-    for o, _ in pairs(obstacles) do
+    -- draw all world
+    for o, _ in pairs(world) do
         o:draw()
     end
     -- draw all prey

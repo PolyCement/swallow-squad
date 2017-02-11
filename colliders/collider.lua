@@ -1,7 +1,5 @@
 -- a polygonal collider
--- takes a bunch of x and y coordinates, each pair is taken as a point
 -- should an object collide with other objects? then it should extend this!
--- might be worth making this non-solid, then having eg. SolidCollider extend it
 
 -- this is an edge
 Segment = Object:extend()
@@ -20,7 +18,7 @@ function Segment:__tostring()
     return "Segment(" .. a_string .. ", " .. b_string .. ", " .. dir_string .. ")"
 end
 
--- todo: just call it a polygon or somethin
+-- THIS is the collider
 Collider = Object:extend()
 
 -- assumes clockwise winding
@@ -31,18 +29,13 @@ function Collider:new(solid, ...)
     else
         self.solid = solid
     end
-    -- convert coords to vectors
+    -- store coordinates as vertices
     self.vertices = {...}
     -- create edges
     self.edges = {}
     for i = 1, #self.vertices do
         table.insert(self.edges, Segment(self.vertices[i], self.vertices[1+i%(#self.vertices)]))
     end
-end
-
--- sets the callback function to the function given
-function Collider:setCallback(callback_function)
-    self.onCollision = callback_function
 end
 
 function Collider:draw()
@@ -60,21 +53,28 @@ function Collider:draw()
     end
 end
 
--- attempt to move by the requested amount, go where we can
-function Collider:move(dx, dy)
-    local delta = collisionHandler:checkCollision(self, vector(dx, dy))
+-- move by the requested amount, correct our position if we hit something
+function Collider:move(delta)
+    self:movementHelper(delta)
+    local correction_delta = collisionHandler:checkCollision(self)
+    self:movementHelper(correction_delta)
+end
+
+-- move by the requested amount, no collision handling
+-- do not use outside of collider!!!!!!!!!!!
+function Collider:movementHelper(delta)
     for i, v in pairs(self.vertices) do
         self.vertices[i] = v + delta
     end
     -- technically we don't need to update these since the direction is the only
-    -- bit we actually use, and since we don't support rotation that doesn't change
+    -- bit we actually use, and since we don't support rotation direction never changes
     for i, v in pairs(self.edges) do
         v.a = v.a + delta
         v.b = v.b + delta
     end
 end
 
--- subclasses should override this
+-- callback function, subclasses should override this
 function Collider:onCollision()
 end
 
@@ -84,18 +84,6 @@ end
 
 function Collider:getVertices()
     return self.vertices
-end
-
--- create a copy of the collider-specific elements
--- used by collision handler to check where we'll end up
--- really shouldn't be overwritten
-function Collider:cloneAt(x, y)
-    local delta = vector(x, y) - self.vertices[1]
-    local new_vertices = {}
-    for _, v in pairs(self.vertices) do
-        table.insert(new_vertices, v + delta)
-    end
-    return Collider(self.solid, unpack(new_vertices))
 end
 
 -- calculate the centre of the polygon

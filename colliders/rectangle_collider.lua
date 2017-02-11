@@ -1,4 +1,5 @@
 -- rectangular collider
+-- i'm thinking this should just be a helper function and not a full blown subclass
 RectangleCollider = Collider:extend()
 
 function RectangleCollider:new(x, y, width, height, solid)

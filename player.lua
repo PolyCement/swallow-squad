@@ -4,9 +4,9 @@ Player = RectangleCollider:extend()
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
     Player.super.new(self, x, y, 48, 128)
-    self.width = self.vertices[3].x - self.vertices[1].x
+    self.width = 48
     -- velocity
-    self.velocity = {x = 0, y = 0}
+    self.velocity = vector(0, 0)
     -- sprite
     self.sprite = AnimatedSprite("assets/swallow_empty.png", self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
     -- how many people's worth of weight we're carrying
@@ -26,6 +26,7 @@ function Player:new(x, y)
     self.jumpSpeedPenalty = (self.jumpSpeed - min_jump_speed)/max_capacity
     self.maxJumps = 2
     self.jumpsLeft = self.maxJumps
+    -- have we hit the ground this cycle?
     self.landed = false
 end
 
@@ -70,17 +71,12 @@ function Player:update(dt)
         end
     end
 
-    -- update x pos
-    local dx = self.velocity.x * dt
-
-    -- update y pos
+    -- update pos
     self.velocity.y = self.velocity.y + gravity * dt
-    local dy = self.velocity.y * dt
-
-    -- print("(" .. self.velocity.x .. ", " .. self.velocity.y .. ")")
+    local delta = self.velocity * dt
 
     -- attempt to move
-    self:move(dx, dy)
+    self:move(delta)
 
     -- update sprite
     self.sprite:update(dt)
@@ -116,20 +112,21 @@ function Player:onCollision(obj, colliding_side)
         self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
         self.acceleration = self.acceleration - self.accPenalty
         -- change sprite when we're full
-        if self.fullness >= 12 then
-            self:updateSprite("assets/swallow_fullest.png")
-        elseif self.fullness >= 9 then
-            self:updateSprite("assets/swallow_fullerer.png")
-        elseif self.fullness >= 6 then
-            self:updateSprite("assets/swallow_fuller.png")
-        elseif self.fullness >= 3 then
-            self:updateSprite("assets/swallow_full.png")
-        end
+        -- commented out because it makes the game crash!!!
+        -- if self.fullness >= 12 then
+            -- self:updateSprite("assets/swallow_fullest.png")
+        -- elseif self.fullness >= 9 then
+            -- self:updateSprite("assets/swallow_fullerer.png")
+        -- elseif self.fullness >= 6 then
+            -- self:updateSprite("assets/swallow_fuller.png")
+        -- elseif self.fullness >= 3 then
+            -- self:updateSprite("assets/swallow_full.png")
+        -- end
     end
     if obj:isSolid() then
         if colliding_side == side.bottom then
             self.landed = true
-            -- so i guess the player handles its own physics (for now)
+            -- the player handles its own physics (for now)
             self.velocity.y = 0
             -- reset jump count
             self.jumpsLeft = self.maxJumps
@@ -156,8 +153,9 @@ function Player:accelerate(a)
     self.velocity.x = math.max(capped_right, -self.maxSpeed)
 end
 
+-- used to tell the camera where to look
 function Player:getPos()
-    return self.vertices[1]:unpack()
+    return self:getCenter()
 end
 
 function Player:__tostring()

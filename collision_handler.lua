@@ -29,18 +29,15 @@ side = {
 -- returns the actual delta achieved
 -- note: this will absolutely fuck up if we collide with multiple objects on a single axis
 function CollisionHandler:checkCollision(obj, delta)
-    local desired_pos = obj.vertices[1] + delta
-    local resulting_pos = desired_pos
-    -- create a shifted clone
-    local shifted_obj = obj:cloneAt(desired_pos:unpack())
+    local total_delta = vector(0, 0)
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
         -- check for a collision at the new position
-        local colliding, mtd = checkCollision(shifted_obj, collider)
+        local colliding, mtd = checkCollision(obj, collider)
         if colliding then
             if collider:isSolid() then
-                resulting_pos = resulting_pos + mtd
+                total_delta = total_delta + mtd
             end
             -- maybe this should be in player
             -- figure out which axis we're being pushed in hardest
@@ -68,7 +65,7 @@ function CollisionHandler:checkCollision(obj, delta)
             collider:onCollision(obj, -colliding_side)
         end
     end
-    return resulting_pos - obj.vertices[1]
+    return total_delta
 end
 
 -- checks collision between 2 colliders
