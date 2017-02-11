@@ -27,7 +27,7 @@ side = {
 -- check for collisions at the position we end up at with the given delta
 -- execute the callback function of any colliding objects
 -- returns the delta resulting from collisions with the environment
-function CollisionHandler:checkCollision(obj, delta)
+function CollisionHandler:checkCollision(obj)
     local correction_delta = vector(0, 0)
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact

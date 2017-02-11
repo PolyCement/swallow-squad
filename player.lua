@@ -3,22 +3,22 @@ Player = RectangleCollider:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
-    Player.super.new(self, x, y, 48, 128)
-    self.width = 48
+    self.width = 32
+    Player.super.new(self, x, y, self.width, 128)
     -- sprite
     self.sprite = AnimatedSprite("assets/swallow_empty.png",
-                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 0)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     local max_capacity = 12
     -- speed stuff
     self.velocity = vector(0, 0)
     self.maxSpeed = 12*meter
-    local min_speed = self.maxSpeed/3
+    local min_speed = self.maxSpeed/2
     self.speedPenalty = (self.maxSpeed - min_speed)/max_capacity
     -- acceleration stuff
-    self.acceleration = 8*meter
-    local min_acceleration = self.acceleration/3
+    self.acceleration = 16*meter
+    local min_acceleration = self.acceleration/2
     self.accPenalty = (self.acceleration - min_acceleration)/max_capacity
     -- jump stuff
     -- i gotta figure out how to make this work based on height rather than speed
@@ -30,6 +30,8 @@ function Player:new(x, y)
     self.jumpsLeft = self.maxJumps
     -- have we hit the ground this cycle?
     self.landed = false
+    -- animation speed, might move this later
+    self.animationVelocity = self.maxSpeed
 end
 
 function Player:update(dt)
@@ -81,7 +83,9 @@ function Player:update(dt)
     self:move(delta)
 
     -- update sprite
-    self.sprite:update(dt)
+    -- we can manipulate the sprite into updating faster or slower by tampering with dt
+    local animation_coefficient = math.abs(self.velocity.x) / self.animationVelocity
+    self.sprite:update(dt * animation_coefficient)
     self.sprite:setPos(self.vertices[1]:unpack())
 end
 
@@ -103,28 +107,8 @@ end
 
 -- collision handling
 function Player:onCollision(obj, colliding_side)
-    -- u r now entering the vore zone
     if obj:is(Prey) then
-        print("tasty!")
-        -- once the taur is in this will need to ask the prey how much it weighs
-        -- wow that looks a lot weirder written down than it sounded in my head
-        self.fullness = self.fullness + 1
-        -- slow down if we eat something
-        self.maxSpeed = self.maxSpeed - self.speedPenalty
-        self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
-        print(self.jumpSpeed)
-        self.acceleration = self.acceleration - self.accPenalty
-        -- change sprite when we're full
-        -- commented out because it makes the game crash!!!
-        -- if self.fullness >= 12 then
-            -- self:updateSprite("assets/swallow_fullest.png")
-        -- elseif self.fullness >= 9 then
-            -- self:updateSprite("assets/swallow_fullerer.png")
-        -- elseif self.fullness >= 6 then
-            -- self:updateSprite("assets/swallow_fuller.png")
-        -- elseif self.fullness >= 3 then
-            -- self:updateSprite("assets/swallow_full.png")
-        -- end
+        self:eat(obj.weight)
     end
     if obj:isSolid() then
         if colliding_side == side.bottom then
@@ -140,6 +124,28 @@ function Player:onCollision(obj, colliding_side)
             self.velocity.x = 0
         end
     end
+end
+
+-- u r now entering the vore zone
+function Player:eat(weight)
+    print("tasty!")
+    self.fullness = self.fullness + weight
+    -- slow down if we eat something
+    self.maxSpeed = self.maxSpeed - self.speedPenalty
+    self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
+    print(self.jumpSpeed)
+    self.acceleration = self.acceleration - self.accPenalty
+    -- change sprite when we're full
+    -- commented out because it makes the game crash!!!
+    -- if self.fullness >= 12 then
+        -- self:updateSprite("assets/swallow_fullest.png")
+    -- elseif self.fullness >= 9 then
+        -- self:updateSprite("assets/swallow_fullerer.png")
+    -- elseif self.fullness >= 6 then
+        -- self:updateSprite("assets/swallow_fuller.png")
+    -- elseif self.fullness >= 3 then
+        -- self:updateSprite("assets/swallow_full.png")
+    -- end
 end
 
 function Player:updateSprite(new_sprite)
