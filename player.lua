@@ -23,7 +23,6 @@ function Player:new(x, y)
     -- jump stuff
     -- i gotta figure out how to make this work based on height rather than speed
     self.jumpSpeed = 14*meter
-    print(self.jumpSpeed)
     local min_jump_speed = self.jumpSpeed*.75
     self.jumpSpeedPenalty = (self.jumpSpeed - min_jump_speed)/max_capacity
     self.maxJumps = 2
@@ -133,7 +132,6 @@ function Player:eat(weight)
     -- slow down if we eat something
     self.maxSpeed = self.maxSpeed - self.speedPenalty
     self.jumpSpeed = self.jumpSpeed - self.jumpSpeedPenalty
-    print(self.jumpSpeed)
     self.acceleration = self.acceleration - self.accPenalty
     -- change sprite when we're full
     -- commented out because it makes the game crash!!!

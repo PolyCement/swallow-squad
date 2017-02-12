@@ -64,6 +64,10 @@ function love.update(dt)
     player:update(dt)
     -- have the camera follow the player
     camera:lookAt(player:getPos():unpack())
+    -- update prey (shout)
+    for p, _  in pairs(prey) do
+        p:update()
+    end
 end
 
 function love.draw()
