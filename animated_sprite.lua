@@ -1,7 +1,7 @@
 AnimatedSprite = Sprite:extend()
 
-function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y)
-    AnimatedSprite.super.new(self, image, x, y, width, height, offset_x, offset_y)
+function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)
+    AnimatedSprite.super.new(self, image, x, y, width, height, offset_x, offset_y, flip_offset)
     local grid = anim8.newGrid(128, 128, self.width, self.height)
     self.animation = anim8.newAnimation(grid('1-8', 1), 0.075)
 end

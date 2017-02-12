@@ -10,13 +10,29 @@ function Prey:new(image, x, y)
     self.weight = 1
     -- are we yelling?
     self.message = nil
+    -- are we looking left?
+    self.facingLeft = true
     -- register with collision handler
     collisionHandler:add(self)
 end
 
 function Prey:update()
+    local pos = self:getCenter()
+    local player_pos = player:getCenter()
+    -- turn to face the player
+    if player_pos.x - pos.x < 0 then
+        if not self.facingLeft then 
+            self.sprite:flip()
+            self.facingLeft = true
+        end
+    else
+        if self.facingLeft then
+            self.sprite:flip()
+            self.facingLeft = false
+        end
+    end
     -- yell when the player gets close
-    if self:getCenter():dist(player:getCenter()) < 256 then
+    if pos:dist(player_pos) < 256 then
         if not self.message then
             self.message = messages[math.random(#messages)]
         end

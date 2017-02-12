@@ -2,7 +2,7 @@
 -- basically just a wrapper around love.graphics.Image
 Sprite = Object:extend()
 
-function Sprite:new(image, x, y, width, height, offset_x, offset_y)
+function Sprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)
     self.image = love.graphics.newImage(image)
     -- set the image to tile if drawn on a quad bigger than it actually is
     self.image:setWrap("repeat", "repeat")
@@ -15,12 +15,13 @@ function Sprite:new(image, x, y, width, height, offset_x, offset_y)
     -- it's mandatory for using wrapping tho
     self.quad = love.graphics.newQuad(0, 0, self.width, self.height,
                                       self.image:getWidth(), self.image:getHeight())
-    -- scaling factor for sprite
-    -- positive if facing right, negative if facing left
+    -- scale: positive if facing right, negative if facing left
     self.scaleX = 1
     -- offsets for drawing the sprite
-    self.offsetX = offset_x
-    self.offsetY = offset_y
+    self.offsetX = offset_x or 0
+    self.offsetY = offset_y or 0
+    -- offset to apply when flipping the sprite
+    self.flipOffset = flip_offset or self.width
 end
 
 function Sprite:draw()
@@ -50,16 +51,14 @@ function Sprite:move(dx, dy)
     self.y = self.y + dy
 end
 
--- flip the image about x + width/2
--- ok but what if instead of passing width here i gave the sprite a pivot axis in its constructor
--- passing width seems really odd? shouldn't the sprite know the axis it should mirror over???
-function Sprite:flip(width)
-    -- first negate scale so the sprite faces the right way
+-- flip the image and apply the flip offset
+function Sprite:flip()
+    -- negate scale so the sprite faces the right way
     self.scaleX = -self.scaleX
     if self:isMirrored() then
-        self.offsetX = self.offsetX + width
+        self.offsetX = self.offsetX + self.flipOffset
     else
-        self.offsetX = self.offsetX - width
+        self.offsetX = self.offsetX - self.flipOffset
     end
 end
 

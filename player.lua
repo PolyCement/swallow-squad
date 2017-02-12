@@ -7,7 +7,7 @@ function Player:new(x, y)
     Player.super.new(self, x, y, self.width, 128)
     -- sprite
     self.sprite = AnimatedSprite("assets/swallow_empty.png",
-                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 0)
+                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 0, self.width)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     local max_capacity = 12
@@ -41,13 +41,13 @@ function Player:update(dt)
             self.sprite:resume()
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
-                self.sprite:flip(self.width)
+                self.sprite:flip()
             end
         elseif love.keyboard.isDown("right") then
             self.sprite:resume()
             self:accelerate(self.acceleration*dt)
             if self.sprite:isMirrored() then
-                self.sprite:flip(self.width)
+                self.sprite:flip()
             end
         else
             -- we have contact with the floor so dampen x velocity too
