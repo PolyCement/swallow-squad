@@ -1,3 +1,6 @@
+-- an extension of sprite, really awful don't look
+anim8 = require "lib.anim8"
+
 AnimatedSprite = Sprite:extend()
 
 function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)

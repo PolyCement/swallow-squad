@@ -1,6 +1,8 @@
 -- tasty!
 Prey = RectangleCollider:extend()
 
+local font = love.graphics.newFont(12)
+
 function Prey:new(image, x, y)
     -- will this work if dimensions aren't given? lets find out lol
     self.sprite = Sprite(image, x, y)
@@ -44,7 +46,10 @@ end
 function Prey:draw()
     if self.message then
         local shout_pos = self.vertices[1] + vector(16, -16)
+        love.graphics.rectangle("fill", shout_pos.x, shout_pos.y,
+                                font:getWidth(self.message), font:getHeight(self.message))
         love.graphics.setColor(0, 0, 0, 255)
+        love.graphics.setFont(font)
         love.graphics.print(self.message, shout_pos.x, shout_pos.y)
         love.graphics.setColor(255, 255, 255, 255)
     end
@@ -74,5 +79,6 @@ messages = {
     "Cool!",
     "Please...",
     "My hero!",
-    "Room for one more?"
+    "Room for one more?",
+    "OwO"
 }
