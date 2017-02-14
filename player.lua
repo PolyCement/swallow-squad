@@ -42,6 +42,8 @@ function Player:new(x, y)
     self.jumpsLeft = MAX_JUMPS
     -- have we hit the ground this cycle?
     self.landed = false
+    -- where was our bottom edge last cycle? (used for one-way platforms)
+    self.prevBottomHeight = self.vertices[3].y
 end
 
 function Player:update(dt)
@@ -98,6 +100,7 @@ function Player:update(dt)
     local delta = self.velocity * dt
 
     -- attempt to move
+    self.prevBottomHeight = self.vertices[3].y
     self:move(delta)
 
     -- update sprite
@@ -132,11 +135,11 @@ function Player:onCollision(obj, colliding_side)
     if obj:is(Prey) then
         self:eat(obj.weight)
     end
+    -- platforms only affect movement from below
     if obj:isSolid() then
         if colliding_side == side.bottom then
-            self.landed = true
-            -- the player handles its own physics (for now)
             self.velocity.y = 0
+            self.landed = true
             -- reset jump count
             self.jumpsLeft = MAX_JUMPS
         -- if we hit the side of something kill x velocity

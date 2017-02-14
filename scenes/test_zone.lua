@@ -12,6 +12,7 @@ function test_zone:enter()
     require "collision_handler"
     require "colliders.collider"
     require "colliders.rectangle_collider"
+    require "colliders.platform"
     require "player"
     require "prey"
     require "sprite"
@@ -39,7 +40,9 @@ function test_zone:enter()
     world[RectangleCollider(0, 544, level_width, 512, true)] = true
     -- these aren't the floor
     world[RectangleCollider(640, 416, 128, 128, true)] = true
-    world[RectangleCollider(128, 288, 256, 64, true)] = true
+    local platform = Platform(vector(128, 288), vector(384, 288), vector(384, 352))
+    platform.platform = true
+    world[platform] = true
     world[RectangleCollider(1024, 128, 256, 416, true)] = true
     world[RectangleCollider(896, 128, 128, 64, true)] = true
     world[RectangleCollider(768, 192, 256, 352, true)] = true

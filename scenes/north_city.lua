@@ -12,6 +12,7 @@ function north_city:enter()
     require "collision_handler"
     require "colliders.collider"
     require "colliders.rectangle_collider"
+    require "colliders.platform"
     require "player"
     require "prey"
     require "sprite"
@@ -44,6 +45,8 @@ function north_city:enter()
     -- these aren't the floor
     world[RectangleCollider(0, 1030, 860, 365, true)] = true
     world[RectangleCollider(1041, 1280, 514, 115, true)] = true
+    -- sloped building
+    world[Platform(vector(0, 1028), vector(670, 760))] = true
     -- todo: make this one move
     world[RectangleCollider(1710, 1178, 166, 15, true)] = true
 
@@ -57,7 +60,7 @@ function north_city:enter()
     prey[Prey("assets/prey_wolf.png", 600, 998)] = true
     prey[Prey("assets/prey_wolf.png", 1600, 1363)] = true
 
-    showColliders = false
+    showColliders = true
 end
 
 function north_city:update(dt)
