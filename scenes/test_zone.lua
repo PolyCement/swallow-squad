@@ -1,6 +1,10 @@
 -- test level, for debugging
 test_zone = {}
 
+-- pixels per meter
+-- use this to specify things in meters rather than pixels
+METER = 16
+
 function test_zone:enter()
     Object = require "lib.classic"
     Camera = require "lib.hump.camera"
@@ -12,10 +16,6 @@ function test_zone:enter()
     require "prey"
     require "sprite"
     require "animated_sprite"
-
-    -- pixels per meter
-    -- use this to attempt to specify things in meters rather than pixels
-    meter = 16
 
     -- collision handler
     collisionHandler = CollisionHandler()
@@ -29,7 +29,7 @@ function test_zone:enter()
     bg = Sprite("assets/bg_test.png", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
     -- set gravity
-    gravity = 9.81*meter
+    gravity = 9.81 * METER
 
     local level_width = 4096
 
@@ -40,8 +40,7 @@ function test_zone:enter()
     -- these aren't the floor
     world[RectangleCollider(640, 416, 128, 128, true)] = true
     world[RectangleCollider(128, 288, 256, 64, true)] = true
-    world[RectangleCollider(128, 288, 256, 64, true)] = true
-    world[RectangleCollider(1024, 128, 256, 544, true)] = true
+    world[RectangleCollider(1024, 128, 256, 416, true)] = true
     world[RectangleCollider(896, 128, 128, 64, true)] = true
     world[RectangleCollider(768, 192, 256, 352, true)] = true
     -- triangles?
@@ -54,8 +53,8 @@ function test_zone:enter()
 
     -- survivors
     prey = {}
-    for idx = 1, 4 do
-        prey[Prey("assets/prey_wolf.png", 512 + 32 * idx * 3, 512)] = true
+    for idx = 1, 12 do
+        prey[Prey("assets/prey_wolf.png", 144 + 16 * idx, 256)] = true
     end
 
     -- toggles drawing of colliders
@@ -90,4 +89,8 @@ end
 
 function test_zone:keypressed(key)
     player:keyPressed(key)
+end
+
+function test_zone:keyreleased(key)
+    player:keyReleased(key)
 end
