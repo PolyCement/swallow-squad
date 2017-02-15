@@ -43,13 +43,18 @@ function Collider:draw()
     if showColliders then
         local r, g, b, a = love.graphics.getColor()
         love.graphics.setColor(255, 0, 0, 255)
-        -- todo: this kinda sucks actually
+        -- shove all coordinates in a table
         local vertices = {}
         for _, v in pairs(self.vertices) do
             table.insert(vertices, v.x)
             table.insert(vertices, v.y)
         end
-        love.graphics.polygon("line", unpack(vertices))
+        -- we need at least 3 points to draw a polygon
+        if #vertices < 6 then
+            love.graphics.line(unpack(vertices))
+        else
+            love.graphics.polygon("line", unpack(vertices))
+        end
         love.graphics.setColor(r, g, b, a)
     end
 end

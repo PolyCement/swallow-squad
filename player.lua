@@ -42,8 +42,8 @@ function Player:new(x, y)
     self.jumpsLeft = MAX_JUMPS
     -- have we hit the ground this cycle?
     self.landed = false
-    -- where was our bottom edge last cycle? (used for one-way platforms)
-    self.prevBottomHeight = self.vertices[3].y
+    -- where was our bottom edge before we moved? (used for one-way platforms)
+    self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
 end
 
 function Player:update(dt)
@@ -73,6 +73,7 @@ function Player:update(dt)
                 self.velocity.x = 0
             end
             -- NO JIGGLIN
+            -- todo: remove jiggle
             self.sprite:stop()
         end
         self.landed = false -- always assume we're not touching the ground
@@ -100,11 +101,10 @@ function Player:update(dt)
     local delta = self.velocity * dt
 
     -- attempt to move
-    self.prevBottomHeight = self.vertices[3].y
+    self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
     self:move(delta)
 
-    -- update sprite
-    -- we can manipulate the sprite into updating faster or slower by tampering with dt
+    -- update sprite (we manipulate it into updating faster or slower by tampering with dt)
     local animation_coefficient = math.abs(self.velocity.x) / MAX_SPEED
     self.sprite:update(dt * animation_coefficient)
     self.sprite:setPos(self.vertices[1]:unpack())
@@ -135,7 +135,6 @@ function Player:onCollision(obj, colliding_side)
     if obj:is(Prey) then
         self:eat(obj.weight)
     end
-    -- platforms only affect movement from below
     if obj:isSolid() then
         if colliding_side == side.bottom then
             self.velocity.y = 0

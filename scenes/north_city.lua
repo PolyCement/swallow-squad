@@ -46,9 +46,11 @@ function north_city:enter()
     world[RectangleCollider(0, 1030, 860, 365, true)] = true
     world[RectangleCollider(1041, 1280, 514, 115, true)] = true
     -- sloped building
-    world[Platform(vector(0, 1028), vector(670, 760))] = true
+    world[Platform(vector(0, 1028), vector(674, 758))] = true
+    world[Platform(vector(789, 489), vector(1045, 386))] = true
+    world[Platform(vector(674, 462), vector(789, 462))] = true
     -- todo: make this one move
-    world[RectangleCollider(1710, 1178, 166, 15, true)] = true
+    world[Platform(vector(1710, 1178), vector(1876, 1178))] = true
 
     -- register level geometry with collision handler
     for v, _ in pairs(world) do
@@ -59,6 +61,7 @@ function north_city:enter()
     prey = {}
     prey[Prey("assets/prey_wolf.png", 600, 998)] = true
     prey[Prey("assets/prey_wolf.png", 1600, 1363)] = true
+    prey[Prey("assets/prey_wolf.png", 700, 430)] = true
 
     showColliders = true
 end
