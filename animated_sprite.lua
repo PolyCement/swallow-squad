@@ -1,4 +1,5 @@
--- an extension of sprite, really awful don't look
+-- really awful don't look
+-- todo: figure out what to do about this mess
 anim8 = require "lib.anim8"
 
 AnimatedSprite = Sprite:extend()
@@ -6,7 +7,7 @@ AnimatedSprite = Sprite:extend()
 function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)
     AnimatedSprite.super.new(self, image, x, y, width, height, offset_x, offset_y, flip_offset)
     self.grid = anim8.newGrid(128, 139, self.width, self.height)
-    self.animation = anim8.newAnimation(self.grid('1-8', 1), 0.075)
+    self.animation = anim8.newAnimation(self.grid(9, 1), 0.075)
     self.stopped = true
 end
 
@@ -29,6 +30,6 @@ function AnimatedSprite:pause()
 end
 
 function AnimatedSprite:resume()
-    self.animation = anim8.newAnimation(self.grid('1-8', 1), 0.075)
+    self.animation = anim8.newAnimation(self.grid("1-8", 1), 0.075)
     self.stopped = false
 end

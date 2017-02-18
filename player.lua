@@ -22,13 +22,16 @@ local JUMP_SPEED_PENALTY = (MAX_JUMP_SPEED - MIN_JUMP_SPEED) / MAX_CAPACITY
 local MAX_TIME_JUMPING = .5
 local MAX_JUMPS = 2
 
+-- if the player's speed drops below this it's set to 0
+local JIGGLE_PREVENTION = 5
+
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
     local width = 32
     Player.super.new(self, x, y, width, 128)
     -- sprite
     self.sprite = AnimatedSprite("assets/swallow_empty.png",
-                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 11, width)
+                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 11, width)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     -- speed stuff
@@ -68,16 +71,15 @@ function Player:update(dt)
             end
         else
             -- we have contact with the floor so decelerate
-            if self.velocity.x > 1 then
+            if self.velocity.x > JIGGLE_PREVENTION then
                 self:accelerate(-self.acceleration*dt)
-            elseif self.velocity.x < -1 then
+            elseif self.velocity.x < -JIGGLE_PREVENTION then
                 self:accelerate(self.acceleration*dt)
             else
                 -- no jigglin
                 self.velocity.x = 0
             end
             -- NO JIGGLIN
-            -- todo: remove jiggle
             self.sprite:stop()
         end
         self.landed = false -- always assume we're not touching the ground
