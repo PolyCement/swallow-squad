@@ -1,14 +1,13 @@
--- really awful don't look
--- todo: figure out what to do about this mess
+-- an animated sprite
 anim8 = require "lib.anim8"
 
 AnimatedSprite = Sprite:extend()
 
-function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)
-    AnimatedSprite.super.new(self, image, x, y, width, height, offset_x, offset_y, flip_offset)
-    self.grid = anim8.newGrid(128, 139, self.width, self.height)
-    self.animation = anim8.newAnimation(self.grid(9, 1), 0.075)
-    self.stopped = true
+function AnimatedSprite:new(frame_width, frame_height, ...)
+    AnimatedSprite.super.new(self, ...)
+    self.grid = anim8.newGrid(frame_width, frame_height, self:getWidth(), self:getHeight())
+    self.animations = {}
+    self.animation = nil
 end
 
 function AnimatedSprite:update(dt)
@@ -20,16 +19,19 @@ function AnimatedSprite:draw()
                         self.scaleX, 1, self.offsetX, self.offsetY)
 end
 
-function AnimatedSprite:stop()
-    self.animation = anim8.newAnimation(self.grid(9, 1), 0.075)
-    self.stopped = true
+-- add an animation
+function AnimatedSprite:addAnimation(name, x, y, ...)
+    self.animations[name] = anim8.newAnimation(self.grid(x, y), ...)
+    -- if this is the first animation, set it as the default
+    if not self.animation then
+        self.animation = self.animations[name]
+    end
 end
 
-function AnimatedSprite:pause()
-    self.animation:pause()
-end
-
-function AnimatedSprite:resume()
-    self.animation = anim8.newAnimation(self.grid("1-8", 1), 0.075)
-    self.stopped = false
+-- switch to the given animation
+function AnimatedSprite:setAnimation(name)
+    -- reset, replace, resume
+    self.animation:pauseAtStart()
+    self.animation = self.animations[name]
+    self.animation:resume()
 end
