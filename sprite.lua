@@ -66,3 +66,14 @@ end
 function Sprite:isMirrored()
     return self.scaleX < 0
 end
+
+-- more stub functions so i can use sprite in player.lua without it crashing
+-- todo: clean this mess up
+function Sprite:stop()
+end
+
+function Sprite:pause()
+end
+
+function Sprite:resume()
+end

@@ -28,7 +28,7 @@ function Player:new(x, y)
     Player.super.new(self, x, y, width, 128)
     -- sprite
     self.sprite = AnimatedSprite("assets/swallow_empty.png",
-                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 0, width)
+                                 self.vertices[1].x, self.vertices[1].y, nil, nil, 58, 11, width)
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     -- speed stuff
@@ -51,13 +51,17 @@ function Player:update(dt)
     if self.landed then
         -- if we're touching the ground, accelerate
         if love.keyboard.isDown("left") then
-            self.sprite:resume()
+            if self.sprite.stopped then
+                self.sprite:resume()
+            end
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         elseif love.keyboard.isDown("right") then
-            self.sprite:resume()
+            if self.sprite.stopped then
+                self.sprite:resume()
+            end
             self:accelerate(self.acceleration*dt)
             if self.sprite:isMirrored() then
                 self.sprite:flip()
@@ -79,7 +83,7 @@ function Player:update(dt)
         self.landed = false -- always assume we're not touching the ground
     else
         -- hi this should play a wing flapping animation but i dont have one so it just, stops
-        self.sprite:pause()
+        -- self.sprite:pause()
         -- while airbourne, allow the player to influence their speed a little
         if love.keyboard.isDown("left") then
             self:accelerate(-self.acceleration*.5*dt)
@@ -160,20 +164,21 @@ function Player:eat(weight)
     self.acceleration = self.acceleration - ACC_PENALTY * weight
     -- change sprite when we're full
     -- commented out because it makes the game crash!!!
-    -- if self.fullness >= 12 then
-        -- self:updateSprite("assets/swallow_fullest.png")
-    -- elseif self.fullness >= 9 then
-        -- self:updateSprite("assets/swallow_fullerer.png")
-    -- elseif self.fullness >= 6 then
-        -- self:updateSprite("assets/swallow_fuller.png")
-    -- elseif self.fullness >= 3 then
-        -- self:updateSprite("assets/swallow_full.png")
-    -- end
+    if self.fullness >= 12 then
+        self:updateSprite("assets/swallow_fullest.png")
+    elseif self.fullness >= 9 then
+        self:updateSprite("assets/swallow_fullerer.png")
+    elseif self.fullness >= 6 then
+        self:updateSprite("assets/swallow_fuller.png")
+    elseif self.fullness >= 3 then
+        self:updateSprite("assets/swallow_full.png")
+    end
 end
 
 function Player:updateSprite(new_sprite)
     local is_mirrored = self.sprite:isMirrored()
-    self.sprite = Sprite(new_sprite, self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0)
+    local flip_offset = self.vertices[3].x - self.vertices[1].x
+    self.sprite = Sprite(new_sprite, self.vertices[1].x, self.vertices[1].y, nil, nil, 64, 0, flip_offset)
     if is_mirrored then
         self.sprite:flip()
     end

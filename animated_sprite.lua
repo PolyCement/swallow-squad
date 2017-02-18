@@ -5,8 +5,9 @@ AnimatedSprite = Sprite:extend()
 
 function AnimatedSprite:new(image, x, y, width, height, offset_x, offset_y, flip_offset)
     AnimatedSprite.super.new(self, image, x, y, width, height, offset_x, offset_y, flip_offset)
-    local grid = anim8.newGrid(128, 128, self.width, self.height)
-    self.animation = anim8.newAnimation(grid('1-8', 1), 0.075)
+    self.grid = anim8.newGrid(128, 139, self.width, self.height)
+    self.animation = anim8.newAnimation(self.grid('1-8', 1), 0.075)
+    self.stopped = true
 end
 
 function AnimatedSprite:update(dt)
@@ -19,7 +20,8 @@ function AnimatedSprite:draw()
 end
 
 function AnimatedSprite:stop()
-    self.animation:pauseAtStart()
+    self.animation = anim8.newAnimation(self.grid(9, 1), 0.075)
+    self.stopped = true
 end
 
 function AnimatedSprite:pause()
@@ -27,5 +29,6 @@ function AnimatedSprite:pause()
 end
 
 function AnimatedSprite:resume()
-    self.animation:resume()
+    self.animation = anim8.newAnimation(self.grid('1-8', 1), 0.075)
+    self.stopped = false
 end

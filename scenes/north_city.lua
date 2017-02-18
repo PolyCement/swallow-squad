@@ -42,13 +42,16 @@ function north_city:enter()
     -- walls
     world[RectangleCollider(-64, 0, 64, level_height, true)] = true
     world[RectangleCollider(level_width, 0, 64, level_height, true)] = true
-    -- these aren't the floor
-    world[RectangleCollider(0, 1030, 860, 365, true)] = true
-    world[RectangleCollider(1041, 1280, 514, 115, true)] = true
+    -- leftmost building
+    world[Platform(vector(0, 1030), vector(860, 1030))] = true
+    -- houses
+    world[Platform(vector(1055, 1236), vector(1540, 1236))] = true
     -- sloped building
     world[Platform(vector(0, 1028), vector(674, 758))] = true
     world[Platform(vector(789, 489), vector(1045, 386))] = true
     world[Platform(vector(674, 462), vector(789, 462))] = true
+    -- rightmost building
+    world[Platform(vector(2114, 782), vector(2456, 782))] = true
     -- todo: make this one move
     world[Platform(vector(1710, 1178), vector(1876, 1178))] = true
 
