@@ -113,7 +113,7 @@ function Player:update(dt)
 
     -- update pos
     -- we're using double gravity cos at this scale standard gravity is super floaty
-    self.velocity.y = self.velocity.y + gravity * 2 * dt
+    self.velocity.y = self.velocity.y + gravity * 3 * dt
     local delta = self.velocity * dt
 
     -- attempt to move

@@ -5,6 +5,7 @@ north_city = {}
 -- use this to specify things in meters rather than pixels
 METER = 16
 
+-- todo: add some function to output mouse position so placing geometry is less painful
 function north_city:enter()
     Object = require "lib.classic"
     Camera = require "lib.hump.camera"
@@ -50,9 +51,17 @@ function north_city:enter()
     world[Platform(vector(0, 1028), vector(674, 758))] = true
     world[Platform(vector(789, 489), vector(1045, 386))] = true
     world[Platform(vector(674, 462), vector(789, 462))] = true
+    -- central building
+    world[Platform(vector(1542, 178), vector(1912, 178))] = true
     -- rightmost building
     world[Platform(vector(2114, 782), vector(2456, 782))] = true
-    -- todo: make this one move
+    world[Platform(vector(2170, 749), vector(2259, 749))] = true
+    -- crane
+    world[Platform(vector(1425, 684), vector(1783, 696))] = true
+    world[Platform(vector(1346, 684), vector(1425, 684))] = true
+    world[Platform(vector(1088, 721), vector(1346, 684))] = true
+    -- todo: make these ones move
+    world[Platform(vector(1312, 317), vector(1478, 317))] = true
     world[Platform(vector(1710, 1178), vector(1876, 1178))] = true
 
     -- register level geometry with collision handler
@@ -65,8 +74,10 @@ function north_city:enter()
     prey[Prey("assets/prey_wolf.png", 600, 998)] = true
     prey[Prey("assets/prey_wolf.png", 1600, 1363)] = true
     prey[Prey("assets/prey_wolf.png", 700, 430)] = true
+    prey[Prey("assets/prey_wolf.png", 1387, 652)] = true
+    prey[Prey("assets/prey_wolf.png", 1756, 146)] = true
 
-    showColliders = true
+    showColliders = false
 end
 
 function north_city:update(dt)
@@ -98,6 +109,17 @@ end
 
 function north_city:keyreleased(key)
     player:keyReleased(key)
+end
+
+-- debug: prints the coordinate under the cursor
+-- mostly it's just so i know where to place world geometry
+function north_city:mousemoved(x, y)
+    if showMousePos then
+        local adjusted_x = x - love.graphics.getWidth() / 2
+        local adjusted_y = y - love.graphics.getHeight() / 2
+        local cam_x, cam_y = camera:position()
+        print(math.floor(adjusted_x + cam_x), math.floor(adjusted_y + cam_y))
+    end
 end
 
 -- restrain the camera to within the playable area
