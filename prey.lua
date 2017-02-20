@@ -58,9 +58,11 @@ function Prey:draw()
 end
 
 -- remove when hit
-function Prey:onCollision()
-    collisionHandler:remove(self)
-    prey[self] = nil
+function Prey:onCollision(obj)
+    if not obj:isFull() then
+        collisionHandler:remove(self)
+        prey[self] = nil
+    end
 end
 
 messages = {

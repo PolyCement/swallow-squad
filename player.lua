@@ -173,7 +173,7 @@ end
 
 -- u r now entering the vore zone
 function Player:eat(weight)
-    print("tasty!")
+    print("tasty! +" .. weight .. " weight")
     self.fullness = self.fullness + weight
     -- slow down if we eat something
     self.runSpeed = self.runSpeed - SPEED_PENALTY * weight
@@ -210,6 +210,10 @@ end
 -- used to tell the camera where to look
 function Player:getPos()
     return self:getCenter()
+end
+
+function Player:isFull()
+    return self.fullness > MAX_CAPACITY
 end
 
 function Player:__tostring()
