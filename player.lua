@@ -216,6 +216,32 @@ function Player:isFull()
     return self.fullness > MAX_CAPACITY
 end
 
+function Player:move(delta)
+    -- move as normal
+    Player.super.move(self, delta)
+    -- if the player is airborne and moving downwards, check what's under em
+    if not self.landed and self.velocity.y > 0 then
+        -- cast a tiny ray from our back edge
+        local back_corner = nil
+        if self.velocity.x < 0 then
+            back_corner = self.vertices[3]
+        else
+            back_corner = self.vertices[4]
+        end
+        local ray_end = back_corner + vector(0, 5)
+        local collisions = collisionHandler:raycast(back_corner, ray_end)
+        -- if there's a platform real close to the player's feet, pull em down
+        -- todo: unfuck this
+        if #collisions > 0 then
+            print(back_corner, ray_end, collisions[1])
+            local delta = vector(0, collisions[1].y - back_corner.y)
+            self:movementHelper(delta)
+            self.landed = true
+            self.velocity.y = 0
+        end
+    end
+end
+
 function Player:__tostring()
     return "Player"
 end

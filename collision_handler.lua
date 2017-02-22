@@ -15,6 +15,39 @@ function CollisionHandler:remove(collider)
     self.colliders[collider] = nil
 end
 
+-- cast a ray and see what it hits
+function CollisionHandler:raycast(ray_start, ray_end)
+    -- check all segments of all shapes for an intersect
+    local collisions = {}
+    local a = {ray_start, ray_end}
+    for collider, _ in pairs(self.colliders) do
+        for _, e in pairs(collider.edges) do
+            local b = {e.a, e.b}
+            local intersect = getIntersect(a, b)
+            if intersect then
+                table.insert(collisions, intersect)
+            end
+        end
+    end
+    return collisions
+end
+
+-- checks if a and b intersect
+function getIntersect(a, b)
+    local p, q = a[1], b[1]
+    local r, s = a[2] - a[1], b[2] - b[1]
+    local t = (-r.y * (p.x - q.x) + r.x * (p.y - q.y)) / (-s.x * r.y + r.x * s.y)
+    local u = (s.x * (p.y - q.y) - s.y * (p.x - q.x)) / (-s.x * r.y + r.x * s.y)
+
+    if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
+        -- a and b intersect at p + t * r = q + u * s
+        return p + t * r
+    end
+    
+    -- a and b do not intersect
+    return nil
+end
+
 -- "enum" for side which collision occurs on
 -- negate to get the opposite side
 side = {
