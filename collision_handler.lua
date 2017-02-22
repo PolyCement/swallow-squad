@@ -33,6 +33,7 @@ function CollisionHandler:raycast(ray_start, ray_end)
 end
 
 -- checks if a and b intersect
+-- this could probably be made more efficient by starting with a bounding box check
 function getIntersect(a, b)
     local p, q = a[1], b[1]
     local r, s = a[2] - a[1], b[2] - b[1]
@@ -40,8 +41,8 @@ function getIntersect(a, b)
     local u = (s.x * (p.y - q.y) - s.y * (p.x - q.x)) / (-s.x * r.y + r.x * s.y)
 
     if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
-        -- a and b intersect at p + t * r = q + u * s
-        return p + t * r
+        -- a and b intersect at p + ur
+        return p + u * r
     end
     
     -- a and b do not intersect

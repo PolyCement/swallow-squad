@@ -137,7 +137,9 @@ end
 function Player:keyPressed(key)
     -- jumping from the ground is free, only air jumps should decrement the counter
     if key == "space" then
-        self.sprite:setAnimation("jump")
+        if self.jumpsLeft > 0 then
+            self.sprite:setAnimation("jump")
+        end
         if not self.landed then
             self.jumpsLeft = self.jumpsLeft - 1
         end
@@ -228,12 +230,14 @@ function Player:move(delta)
         else
             back_corner = self.vertices[4]
         end
+        -- this has to be 5 cos vern moves so fast they can bounce by more than 1px in a single frame
+        -- especially on a steep slope (ie. the left crane in north city)
+        -- this causes snapping which might be noticeable if u look real hard
+        -- checking whether the player was landed on the last frame would change that
         local ray_end = back_corner + vector(0, 5)
         local collisions = collisionHandler:raycast(back_corner, ray_end)
-        -- if there's a platform real close to the player's feet, pull em down
-        -- todo: unfuck this
+        -- if there's a platform close to the player's feet, pull em down
         if #collisions > 0 then
-            print(back_corner, ray_end, collisions[1])
             local delta = vector(0, collisions[1].y - back_corner.y)
             self:movementHelper(delta)
             self.landed = true
