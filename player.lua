@@ -49,6 +49,7 @@ function Player:new(x, y)
     self.jumpsLeft = MAX_JUMPS
     -- have we hit the ground this cycle?
     self.landed = false
+    self.wasLanded = false
     -- are we running?
     self.running = false
     -- where was our bottom edge before we moved? (used for one-way platforms)
@@ -56,6 +57,7 @@ function Player:new(x, y)
 end
 
 function Player:update(dt)
+    self.wasLanded = self.landed
     -- mess with the player's velocity
     if self.landed then
         -- if we're touching the ground, accelerate
@@ -154,7 +156,7 @@ function Player:keyReleased(key)
 end
 
 -- collision handling
-function Player:onCollision(obj, colliding_side)
+function Player:onCollision(obj, colliding_side, mtd)
     if obj:is(Prey) then
         self:eat(obj.weight)
     end
@@ -221,8 +223,8 @@ end
 function Player:move(delta)
     -- move as normal
     Player.super.move(self, delta)
-    -- if the player is airborne and moving downwards, check what's under em
-    if not self.landed and self.velocity.y > 0 then
+    -- if the player becomes airborne and is moving downwards, check what's under em
+    if self.wasLanded and not self.landed and self.velocity.y > 0 then
         -- cast a tiny ray from our back edge
         local back_corner = nil
         if self.velocity.x < 0 then
@@ -230,18 +232,20 @@ function Player:move(delta)
         else
             back_corner = self.vertices[4]
         end
-        -- this has to be 5 cos vern moves so fast they can bounce by more than 1px in a single frame
-        -- especially on a steep slope (ie. the left crane in north city)
-        -- this causes snapping which might be noticeable if u look real hard
-        -- checking whether the player was landed on the last frame would change that
+        -- 5 is a pretty long beam but required to handle slopes up to ~45 degrees while empty
         local ray_end = back_corner + vector(0, 5)
         local collisions = collisionHandler:raycast(back_corner, ray_end)
         -- if there's a platform close to the player's feet, pull em down
         if #collisions > 0 then
-            local delta = vector(0, collisions[1].y - back_corner.y)
-            self:movementHelper(delta)
-            self.landed = true
-            self.velocity.y = 0
+            local segment, intersect = collisions[1][1], collisions[1][2]
+            -- don't do anything if we're not actually going down the slope
+            -- (this fixes issues with the ray catching a slight slope while ascending)
+            if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
+                local delta = vector(0, intersect.y - back_corner.y)
+                self:movementHelper(delta)
+                self.landed = true
+                self.velocity.y = 0
+            end
         end
     end
 end

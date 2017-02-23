@@ -25,7 +25,7 @@ function CollisionHandler:raycast(ray_start, ray_end)
             local b = {e.a, e.b}
             local intersect = getIntersect(a, b)
             if intersect then
-                table.insert(collisions, intersect)
+                table.insert(collisions, {e, intersect})
             end
         end
     end
@@ -63,12 +63,14 @@ side = {
 -- returns the delta resulting from collisions with the environment
 function CollisionHandler:checkCollision(obj)
     local correction_delta = vector(0, 0)
+    local num_collisions = 0
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
         -- check for a collision at the new position
         local mtd = checkCollision(obj, collider)
         if mtd then
+            num_collisions = num_collisions + 1
             if collider:isSolid() then
                 correction_delta = correction_delta + mtd
             end
@@ -94,8 +96,8 @@ function CollisionHandler:checkCollision(obj)
         end
         if colliding_side then
             -- hit that mf callback button
-            obj:onCollision(collider, colliding_side)
-            collider:onCollision(obj, -colliding_side)
+            obj:onCollision(collider, colliding_side, mtd)
+            collider:onCollision(obj, -colliding_side, mtd)
         end
     end
     return correction_delta

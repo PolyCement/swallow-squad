@@ -8,10 +8,6 @@ end
 
 -- platforms are only solid if the player was above them on the previous cycle
 function Platform:isSolid()
-    -- if we're moving upwards the platform shouldn't be solid
-    if player.velocity.y < 0 then
-        return false
-    end
     -- if the player was above the bounding box of the platform, stay solid (allows hanging on edges)
     if player.prevBottomPos.y <= math.min(self.vertices[1].y, self.vertices[2].y) then
         return true

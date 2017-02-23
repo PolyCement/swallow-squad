@@ -83,7 +83,6 @@ world_colliders = {
     Platform(vector(3418, 830), vector(3584, 830))
 }
 
--- todo: add some function to output mouse position so placing geometry is less painful
 function north_city:enter()
     -- collision handler
     collisionHandler = CollisionHandler()
@@ -92,11 +91,6 @@ function north_city:enter()
     local player_x, player_y = 1100, 1000
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
-
-    -- debug: force feed vern (so we can see where they can reach when full)
-    -- for _ = 1, 11 do
-        -- player:eat(1)
-    -- end
 
     -- background
     bg = Sprite("assets/north_city.png", 0, 0)
