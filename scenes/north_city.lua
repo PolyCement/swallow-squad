@@ -9,6 +9,7 @@ require "player"
 require "prey"
 require "sprite"
 require "animated_sprite"
+require "clock"
 
 -- level 1, north city
 north_city = {}
@@ -88,7 +89,7 @@ function north_city:enter()
     collisionHandler = CollisionHandler()
 
     -- define player & camera, start em both at the same coordinates
-    local player_x, player_y = 1100, 1000
+    local player_x, player_y = level_width/2, 2768
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
@@ -97,6 +98,12 @@ function north_city:enter()
 
     -- set gravity
     gravity = 9.81 * METER
+
+    -- the clock
+    clock = Clock(20, love.graphics.getHeight() - 50)
+
+    -- has the game finished?
+    gameEnded = false
 
     -- define level geometry
     world = {}
@@ -125,16 +132,32 @@ function north_city:enter()
     taur.weight = 3
     prey[taur] = true
 
-    showColliders = true
-    showMousePos = true
+    showColliders = false
+    showMousePos = false
 end
 
 function north_city:update(dt)
-    player:update(dt)
+    -- check if the game should end
+    if length(prey) == 0 then
+        gameEnded = true
+    end
+    if not gameEnded then
+        clock:update(dt)
+        player:update(dt)
+    end
     camera:lookAt(bind_camera():unpack())
     for p, _  in pairs(prey) do
         p:update()
     end
+end
+
+-- i can't believe i have to define this myself
+function length(t)
+    local count = 0
+    for _ in pairs(t) do
+        count = count + 1
+    end
+    return count
 end
 
 function north_city:draw()
@@ -150,10 +173,36 @@ function north_city:draw()
     end
     player:draw()
     camera:detach()
+    -- draw the timer
+    if gameEnded then
+        printEndMessage()
+    else
+        clock:draw()
+    end
+end
+
+local font = love.graphics.newFont(32)
+-- prints the message when the game ends
+function printEndMessage()
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(font)
+    local message = "Congratulations!\nYou saved everyone!\n\n" .. clock:getFormattedTime()
+    -- centre the message
+    local text_width = font:getWidth(message)
+    local x = (love.graphics.getWidth() - text_width) / 2
+    local y = (love.graphics.getHeight() - font:getHeight(message)*4) / 2
+    love.graphics.printf(message, x, y, text_width, "center")
+    love.graphics.setColor(255, 255, 255, 255)
 end
 
 function north_city:keypressed(key)
-    player:keyPressed(key)
+    if gameEnded then
+        if key == "return" then
+            Gamestate.switch(main_menu)
+        end
+    else
+        player:keyPressed(key)
+    end
 end
 
 function north_city:keyreleased(key)
