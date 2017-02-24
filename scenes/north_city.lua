@@ -36,24 +36,26 @@ world_colliders = {
     Platform(vector(4649, 2735), vector(level_width, 2735)),
     -- generic buildings on left (shortest to tallest)
     Platform(vector(209, 2578), vector(892, 2578)),
-    Platform(vector(1164, 2531), vector(2023, 2531)),
     Platform(vector(545, 2453), vector(1227, 2453)),
     Platform(vector(58, 1858), vector(770, 1858)),
     Platform(vector(824, 1418), vector(1506, 1418)),
     Platform(vector(71, 1171), vector(753, 1171)),
     Platform(vector(515, 1057), vector(714, 1057)),
     Platform(vector(273, 896), vector(957, 896)),
+    -- old warehouse
+    Platform(vector(1158, 2530), vector(2028, 2530)),
     -- sloped building
     Platform(vector(409, 2328), vector(1740, 1796)),
     Platform(vector(1740, 1573), vector(1855, 1573)),
     Platform(vector(1855, 1600), vector(2333, 1408)),
     -- generic buildings on right (shortest to tallest)
     Platform(vector(3277, 2478), vector(3964, 2478)),
-    Platform(vector(4326, 2337), vector(4650, 2337)),
     Platform(vector(3964, 2161), vector(4326, 2161)),
     Platform(vector(4020, 2128), vector(4109, 2128)),
     Platform(vector(4230, 1928), vector(4778, 1928)),
     Platform(vector(2937, 1032), vector(3620, 1032)),
+    -- old busted up building
+    Platform(vector(4326, 2335), vector(4655, 2335)),
     -- slope-topped building on right
     Platform(vector(4327, 1038), vector(4378, 1038)),
     Platform(vector(4378, 1038), vector(4888, 867)),
@@ -68,8 +70,8 @@ world_colliders = {
     Platform(vector(2220, 2771), vector(2703, 2771)),
     -- building w/ crane
     Platform(vector(1053, 721), vector(1735, 721)),
-    Platform(vector(1520, 691), vector(1547, 691)),
-    Platform(vector(1533, 691), vector(1947, 285)),
+    Platform(vector(1520, 690), vector(1547, 690)),
+    Platform(vector(1533, 690), vector(1944, 288)),
     -- crane
     Platform(vector(3512, 503), vector(3868, 493)),
     Platform(vector(3868, 493), vector(3948, 493)),
@@ -118,7 +120,7 @@ function north_city:enter()
 
     -- survivors
     prey = {}
-    prey[Prey("assets/prey_wolf.png", 4628, 2305)] = true
+    prey[Prey("assets/prey_wolf.png", 4628, 2303)] = true
     prey[Prey("assets/prey_wolf.png", 100, 1139)] = true
     prey[Prey("assets/prey_wolf.png", 1680, 689)] = true
     prey[Prey("assets/prey_wolf.png", 4901, 835)] = true
@@ -132,8 +134,8 @@ function north_city:enter()
     taur.weight = 3
     prey[taur] = true
 
-    showColliders = false
-    showMousePos = false
+    showColliders = true
+    showMousePos = true
 end
 
 function north_city:update(dt)
