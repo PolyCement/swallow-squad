@@ -37,9 +37,10 @@ function Player:new(x, y)
     self.sprite = AnimatedSprite(128, 150, "assets/swallow_empty.png",
                                  self.vertices[1].x, self.vertices[1].y, 64, 22, width)
     -- animations
-    self.sprite:addAnimation("stand", 9, 1, 0.075)
+    self.sprite:addAnimation("stand", 9, 1, 1)
     self.sprite:addAnimation("run", "1-8", 1, 0.075)
     self.sprite:addAnimation("jump", "10-11", 1, 0.05, "pauseAtEnd")
+    self.sprite:addAnimation("fall", 10, 1, 1, "pauseAtEnd")
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     -- speed stuff
@@ -53,7 +54,6 @@ function Player:new(x, y)
     self.jumpsLeft = MAX_JUMPS
     -- have we hit the ground this cycle?
     self.landed = false
-    self.wasLanded = false
     -- are we running?
     self.running = false
     -- where was our bottom edge before we moved? (used for one-way platforms)
@@ -61,30 +61,31 @@ function Player:new(x, y)
 end
 
 function Player:update(dt)
-    self.wasLanded = self.landed
+    -- todo: better animation control
     -- mess with the player's velocity
     if self.landed then
-        -- if we're touching the ground, accelerate
+        -- if we're touching the ground, run
         if love.keyboard.isDown("left") then
             if not self.running then
-                self.sprite:setAnimation("run")
                 self.running = true
+                self.sprite:setAnimation("run")
             end
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         elseif love.keyboard.isDown("right") then
-            if not self.running then
-                self.sprite:setAnimation("run")
-                self.running = true
-            end
             self:accelerate(self.acceleration*dt)
+            if not self.running then
+                self.running = true
+                self.sprite:setAnimation("run")
+            end
             if self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         else
             self.running = false
+            self.sprite:setAnimation("stand")
             -- we have contact with the floor so decelerate
             if self.velocity.x > JIGGLE_PREVENTION then
                 self:accelerate(-self.acceleration*dt)
@@ -94,14 +95,9 @@ function Player:update(dt)
                 -- no jigglin
                 self.velocity.x = 0
             end
-            -- NO JIGGLIN
-            self.sprite:setAnimation("stand")
         end
-        self.landed = false -- always assume we're not touching the ground
     else
         self.running = false
-        -- hi this should play a wing flapping animation but i dont have one so it just, stops
-        -- self.sprite:pause()
         -- while airbourne, allow the player to influence their speed a little
         if love.keyboard.isDown("left") then
             self:accelerate(-self.acceleration*.5*dt)
@@ -115,6 +111,10 @@ function Player:update(dt)
         and self.timeJumping < MAX_TIME_JUMPING then
         self.timeJumping = self.timeJumping + dt
         self.velocity.y = -self.jumpSpeed
+    else
+        if self.velocity.y > 0 then
+            self.sprite:setAnimation("fall")
+        end
     end
 
     -- update pos
@@ -225,10 +225,12 @@ function Player:isFull()
 end
 
 function Player:move(delta)
+    local was_landed = self.landed
+    self.landed = false 
     -- move as normal
     Player.super.move(self, delta)
     -- if the player becomes airborne and is moving downwards, check what's under em
-    if self.wasLanded and not self.landed and self.velocity.y > 0 then
+    if was_landed and not self.landed and self.velocity.y > 0 then
         -- cast a tiny ray from our back edge
         local back_corner = nil
         if self.velocity.x < 0 then
