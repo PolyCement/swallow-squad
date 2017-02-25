@@ -1,14 +1,35 @@
+-- messages yelled by prey
+local messages = {
+    "Finally!",
+    "Is this safe?",
+    "Thanks!",
+    "Thank you!",
+    "Thanks...",
+    "Cool if I strip first?",
+    "<3",
+    "What big teeth you have!",
+    "Again?",
+    "Help!",
+    "Help me!",
+    "Nice!",
+    "Cool!",
+    "Please...",
+    "My hero!",
+    "Room for one more?",
+    "OwO"
+}
+
 -- tasty!
 Prey = RectangleCollider:extend()
 
 local font = love.graphics.newFont(12)
 
 function Prey:new(image, x, y)
-    -- will this work if dimensions aren't given? lets find out lol
+    -- we wanna be the size of the sprite so define the sprite first
     self.sprite = Sprite(image, x, y)
     Prey.super.new(self, x, y, self.sprite:getWidth(), self.sprite:getHeight())
     self.solid = false
-    -- taur should set this to 3
+    -- how heavy are we
     self.weight = 1
     -- are we yelling?
     self.message = nil
@@ -57,30 +78,27 @@ function Prey:draw()
     self.sprite:draw()
 end
 
--- remove when hit
+-- remove when eaten
 function Prey:onCollision(obj)
-    if not obj:isFull() then
+    if obj:is(Player) and not obj:isFull() then
         collisionHandler:remove(self)
         prey[self] = nil
     end
 end
 
-messages = {
-    "Finally!",
-    "Is this safe?",
-    "Thanks!",
-    "Thank you!",
-    "Thanks...",
-    "Cool if I strip first?",
-    "<3",
-    "What big teeth you have!",
-    "Again?",
-    "Help!",
-    "Help me!",
-    "Nice!",
-    "Cool!",
-    "Please...",
-    "My hero!",
-    "Room for one more?",
-    "OwO"
-}
+function Prey:getWeight()
+    return self.weight
+end
+
+-- tasty but filling
+Taur = Prey:extend()
+
+function Taur:new(...)
+    Taur.super.new(self, ...)
+    self.weight = 3
+end
+
+function Taur:onCollision(obj)
+    -- put some code here to tell the player they vored that taur
+    Taur.super.onCollision(self, obj)
+end

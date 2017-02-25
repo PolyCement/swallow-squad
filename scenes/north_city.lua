@@ -91,18 +91,22 @@ function north_city:enter()
     collisionHandler = CollisionHandler()
 
     -- define player & camera, start em both at the same coordinates
-    local player_x, player_y = level_width/2, 2768
+    -- if we don't spawn the player slightly above the ground they clip through sometimes
+    local player_x, player_y = level_width/2, 2766
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
     -- background
     bg = Sprite("assets/north_city.png", 0, 0)
 
+    -- gui blade
+    blade = love.graphics.newImage("assets/gui_blade.png")
+
     -- set gravity
     gravity = 9.81 * METER
 
     -- the clock
-    clock = Clock(20, love.graphics.getHeight() - 50)
+    clock = Clock()
 
     -- has the game finished?
     gameEnded = false
@@ -129,13 +133,11 @@ function north_city:enter()
     prey[Prey("assets/prey_wolf.png", 2028, 1209)] = true
     prey[Prey("assets/prey_wolf.png", 2964, 1000)] = true
     prey[Prey("assets/prey_wolf.png", 250, 2546)] = true
-    -- this one should be a taur
-    local taur = Prey("assets/prey_wolf.png", 2678, 220)
-    taur.weight = 3
-    prey[taur] = true
+    -- it's taur time
+    prey[Taur("assets/prey_wolf.png", 2678, 220)] = true
 
-    showColliders = true
-    showMousePos = true
+    showColliders = false
+    showMousePos = false
 end
 
 function north_city:update(dt)
@@ -177,24 +179,47 @@ function north_city:draw()
     camera:detach()
     -- draw the timer
     if gameEnded then
-        printEndMessage()
+        drawEndMessage()
     else
-        clock:draw()
+        drawGUI()
     end
 end
 
+local gui_font = love.graphics.newFont(28)
 local font = love.graphics.newFont(32)
 -- prints the message when the game ends
-function printEndMessage()
+function drawEndMessage()
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(font)
-    local message = "Congratulations!\nYou saved everyone!\n\n" .. clock:getFormattedTime()
+    local message = "Congratulations!\nYou saved everyone!\n\nTime: " .. clock:getFormattedTime()
     -- centre the message
     local text_width = font:getWidth(message)
     local x = (love.graphics.getWidth() - text_width) / 2
     local y = (love.graphics.getHeight() - font:getHeight(message)*4) / 2
     love.graphics.printf(message, x, y, text_width, "center")
     love.graphics.setColor(255, 255, 255, 255)
+end
+
+function drawGUI()
+    -- draw gui blades
+    drawBlades()
+    local y = love.graphics.getHeight() - 48
+    -- draw the clock
+    clock:draw(10, y)
+    -- draw the number of remaining prey
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(gui_font)
+    local message = "Survivors: " .. length(prey)
+    love.graphics.print(message, 605, y)
+    love.graphics.setColor(255, 255, 255, 255)
+end
+
+function drawBlades()
+    local y = love.graphics.getHeight() - blade:getHeight()
+    -- left blade
+    love.graphics.draw(blade, 0, y)
+    -- right blade
+    love.graphics.draw(blade, love.graphics.getWidth(), y, 0, -1, 1)
 end
 
 function north_city:keypressed(key)

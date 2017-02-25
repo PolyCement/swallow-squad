@@ -158,7 +158,7 @@ end
 -- collision handling
 function Player:onCollision(obj, colliding_side, mtd)
     if obj:is(Prey) then
-        self:eat(obj.weight)
+        self:eat(obj:getWeight())
     end
     if obj:isSolid() then
         if colliding_side == side.bottom then
