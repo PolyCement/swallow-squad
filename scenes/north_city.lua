@@ -3,20 +3,15 @@ Camera = require "lib.hump.camera"
 vector = require "lib.hump.vector"
 require "collision_handler"
 require "colliders.collider"
-require "colliders.rectangle_collider"
 require "colliders.platform"
-require "player"
-require "prey"
+require "actors.player"
+require "actors.prey"
 require "sprite"
 require "animated_sprite"
 require "clock"
 
 -- level 1, north city
 north_city = {}
-
--- pixels per meter
--- use this to specify things in meters rather than pixels
-METER = 16
 
 -- todo: figure out somewhere better to put this
 local level_width = 5000
@@ -103,7 +98,7 @@ function north_city:enter()
     blade = love.graphics.newImage("assets/gui_blade.png")
 
     -- set gravity
-    gravity = 9.81 * METER
+    gravity = 9.81 * 16
 
     -- the clock
     clock = Clock()
@@ -134,7 +129,7 @@ function north_city:enter()
     prey[Prey("assets/prey_wolf.png", 2964, 1000)] = true
     prey[Prey("assets/prey_wolf.png", 250, 2546)] = true
     -- it's taur time
-    prey[Taur("assets/prey_wolf.png", 2678, 220)] = true
+    prey[Taur("assets/taur_fox.png", 2678, 213)] = true
 
     showColliders = false
     showMousePos = false

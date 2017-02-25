@@ -25,9 +25,9 @@ Prey = RectangleCollider:extend()
 local font = love.graphics.newFont(12)
 
 function Prey:new(image, x, y)
-    -- we wanna be the size of the sprite so define the sprite first
-    self.sprite = Sprite(image, x, y)
-    Prey.super.new(self, x, y, self.sprite:getWidth(), self.sprite:getHeight())
+    -- define the sprite first so we can use its dimensions to set our own
+    self.sprite = Sprite(image, x, y, 1, 1)
+    Prey.super.new(self, x, y, self.sprite:getWidth()-2, self.sprite:getHeight()-2)
     self.solid = false
     -- how heavy are we
     self.weight = 1
@@ -66,7 +66,7 @@ end
 
 function Prey:draw()
     if self.message then
-        local shout_pos = self.vertices[1] + vector(16, -16)
+        local shout_pos = self.vertices[2] + vector(0, -16)
         love.graphics.rectangle("fill", shout_pos.x, shout_pos.y,
                                 font:getWidth(self.message), font:getHeight(self.message))
         love.graphics.setColor(0, 0, 0, 255)

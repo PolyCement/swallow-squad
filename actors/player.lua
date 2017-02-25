@@ -1,6 +1,10 @@
 -- rrerr
 Player = RectangleCollider:extend()
 
+-- pixels per meter
+-- use this to specify things in meters rather than pixels
+local METER = 16
+
 -- keeping these constants out here for now so i can mess with em more easily
 -- i don't feel like they were any better off as instance variables anyway?
 local MAX_CAPACITY = 12

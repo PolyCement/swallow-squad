@@ -1,23 +1,18 @@
+Object = require "lib.classic"
+Camera = require "lib.hump.camera"
+vector = require "lib.hump.vector"
+require "collision_handler"
+require "colliders.collider"
+require "colliders.platform"
+require "actors.player"
+require "actors.prey"
+require "sprite"
+require "animated_sprite"
+
 -- test level, for debugging
 test_zone = {}
 
--- pixels per meter
--- use this to specify things in meters rather than pixels
-METER = 16
-
 function test_zone:enter()
-    Object = require "lib.classic"
-    Camera = require "lib.hump.camera"
-    vector = require "lib.hump.vector"
-    require "collision_handler"
-    require "colliders.collider"
-    require "colliders.rectangle_collider"
-    require "colliders.platform"
-    require "player"
-    require "prey"
-    require "sprite"
-    require "animated_sprite"
-
     -- collision handler
     collisionHandler = CollisionHandler()
 
@@ -30,7 +25,7 @@ function test_zone:enter()
     bg = Sprite("assets/bg_test.png", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
     -- set gravity
-    gravity = 9.81 * METER
+    gravity = 9.81 * 16
 
     local level_width = 4096
 

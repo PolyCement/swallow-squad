@@ -17,7 +17,7 @@ function Sprite:new(image, x, y, offset_x, offset_y, flip_offset)
     self.offsetX = offset_x or 0
     self.offsetY = offset_y or 0
     -- offset to apply when flipping the sprite
-    self.flipOffset = flip_offset or width
+    self.flipOffset = flip_offset or (width - self.offsetX * 2)
 end
 
 function Sprite:draw()
