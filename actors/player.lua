@@ -37,7 +37,7 @@ function Player:new(x, y)
     self.sprite = AnimatedSprite(128, 150, "assets/swallow.png",
                                  self.vertices[1].x, self.vertices[1].y, 64, 22, width)
     -- register animations
-    for i=1,3 do
+    for i=1, 5 do
         self.sprite:addAnimation("stand" .. i, 9, i, 1)
         self.sprite:addAnimation("run" .. i, "1-8", i, 0.075)
         self.sprite:addAnimation("jump" .. i, "10-11", i, 0.05, "pauseAtEnd")
@@ -60,6 +60,8 @@ function Player:new(x, y)
     self.running = false
     -- where was our bottom edge before we moved? (used for one-way platforms)
     self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
+    -- what's our current animation
+    self.currentAnimation = "stand"
 end
 
 function Player:update(dt)
@@ -87,7 +89,9 @@ function Player:update(dt)
             end
         else
             self.running = false
-            self:setAnimation("stand")
+            if self.currentAnimation ~= "stand" then
+                self:setAnimation("stand")
+            end
             -- we have contact with the floor so decelerate
             if self.velocity.x > JIGGLE_PREVENTION then
                 self:accelerate(-self.acceleration*dt)
@@ -114,7 +118,7 @@ function Player:update(dt)
         self.timeJumping = self.timeJumping + dt
         self.velocity.y = -self.jumpSpeed
     else
-        if self.velocity.y > 0 then
+        if self.velocity.y > 0 and self.currentAnimation ~= "fall" then
             self:setAnimation("fall")
         end
     end
@@ -139,7 +143,8 @@ end
 
 -- wraps sprite:setAnimation so we can handle rows automatically
 function Player:setAnimation(name)
-    local fullness_level = 1 + math.floor(self.fullness / 3)
+    local fullness_level = 1 + math.floor((self.fullness + 1) / 3)
+    self.currentAnimation = name
     self.sprite:setAnimation(name .. fullness_level)
 end
 
@@ -189,13 +194,15 @@ end
 
 -- u r now entering the vore zone
 function Player:eat(weight)
-    print("tasty! +" .. weight .. " weight")
     self.fullness = self.fullness + weight
-    -- slow down if we eat something
+    -- apply movement penalties
     self.runSpeed = self.runSpeed - SPEED_PENALTY * weight
     self.jumpSpeed = self.jumpSpeed - JUMP_SPEED_PENALTY * weight
     self.acceleration = self.acceleration - ACC_PENALTY * weight
-    -- change sprite when we're full
+    -- update sprite
+    local frame_time = self.sprite:getTime()
+    self:setAnimation(self.currentAnimation)
+    self.sprite:setTime(frame_time)
 end
 
 -- increase velocity by the given amount, bound by our current run speed

@@ -36,3 +36,27 @@ function AnimatedSprite:setAnimation(name)
     self.animation = self.animations[name]
     self.animation:resume()
 end
+
+-- /!\ GOOD PROGRAMMER ALERT /!\
+-- these functions reach right into anim8's guts,
+-- don't expect them to work with newer versions
+-- /!\ GOOD PROGRAMMER ALERT /!\
+
+-- returns how long the current loop has been running
+function AnimatedSprite:getTime()
+    return self.animation.timer
+end
+
+-- skips the animation to the time given
+function AnimatedSprite:setTime(time)
+    -- figure out what frame we need
+    local frame = nil
+    for i, interval in ipairs(self.animation.intervals) do
+        if not frame and (time - interval) < 0 then
+            frame = i - 1
+        end
+    end
+    -- set the frame and timer
+    self.animation.position = frame
+    self.animation.timer = time
+end
