@@ -34,13 +34,15 @@ function Player:new(x, y)
     local width = 32
     Player.super.new(self, x, y, width, 128)
     -- sprite
-    self.sprite = AnimatedSprite(128, 150, "assets/swallow_empty.png",
+    self.sprite = AnimatedSprite(128, 150, "assets/swallow.png",
                                  self.vertices[1].x, self.vertices[1].y, 64, 22, width)
-    -- animations
-    self.sprite:addAnimation("stand", 9, 1, 1)
-    self.sprite:addAnimation("run", "1-8", 1, 0.075)
-    self.sprite:addAnimation("jump", "10-11", 1, 0.05, "pauseAtEnd")
-    self.sprite:addAnimation("fall", 10, 1, 1, "pauseAtEnd")
+    -- register animations
+    for i=1,3 do
+        self.sprite:addAnimation("stand" .. i, 9, i, 1)
+        self.sprite:addAnimation("run" .. i, "1-8", i, 0.075)
+        self.sprite:addAnimation("jump" .. i, "10-11", i, 0.05, "pauseAtEnd")
+        self.sprite:addAnimation("fall" .. i, 10, i, 1)
+    end
     -- how many people's worth of weight we're carrying
     self.fullness = 0
     -- speed stuff
@@ -68,7 +70,7 @@ function Player:update(dt)
         if love.keyboard.isDown("left") then
             if not self.running then
                 self.running = true
-                self.sprite:setAnimation("run")
+                self:setAnimation("run")
             end
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
@@ -78,14 +80,14 @@ function Player:update(dt)
             self:accelerate(self.acceleration*dt)
             if not self.running then
                 self.running = true
-                self.sprite:setAnimation("run")
+                self:setAnimation("run")
             end
             if self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         else
             self.running = false
-            self.sprite:setAnimation("stand")
+            self:setAnimation("stand")
             -- we have contact with the floor so decelerate
             if self.velocity.x > JIGGLE_PREVENTION then
                 self:accelerate(-self.acceleration*dt)
@@ -113,7 +115,7 @@ function Player:update(dt)
         self.velocity.y = -self.jumpSpeed
     else
         if self.velocity.y > 0 then
-            self.sprite:setAnimation("fall")
+            self:setAnimation("fall")
         end
     end
 
@@ -135,6 +137,12 @@ function Player:update(dt)
     self.sprite:setPos(self.vertices[1]:unpack())
 end
 
+-- wraps sprite:setAnimation so we can handle rows automatically
+function Player:setAnimation(name)
+    local fullness_level = 1 + math.floor(self.fullness / 3)
+    self.sprite:setAnimation(name .. fullness_level)
+end
+
 function Player:draw()
     Player.super.draw(self)
     self.sprite:draw()
@@ -144,7 +152,7 @@ function Player:keyPressed(key)
     -- jumping from the ground is free, only air jumps should decrement the counter
     if key == "space" then
         if self.jumpsLeft > 0 then
-            self.sprite:setAnimation("jump")
+            self:setAnimation("jump")
         end
         if not self.landed then
             self.jumpsLeft = self.jumpsLeft - 1
@@ -188,25 +196,6 @@ function Player:eat(weight)
     self.jumpSpeed = self.jumpSpeed - JUMP_SPEED_PENALTY * weight
     self.acceleration = self.acceleration - ACC_PENALTY * weight
     -- change sprite when we're full
-    -- commented out because it makes the game crash!!!
-    -- if self.fullness >= 12 then
-        -- self:updateSprite("assets/swallow_fullest.png")
-    -- elseif self.fullness >= 9 then
-        -- self:updateSprite("assets/swallow_fullerer.png")
-    -- elseif self.fullness >= 6 then
-        -- self:updateSprite("assets/swallow_fuller.png")
-    -- elseif self.fullness >= 3 then
-        -- self:updateSprite("assets/swallow_full.png")
-    -- end
-end
-
-function Player:updateSprite(new_sprite)
-    local is_mirrored = self.sprite:isMirrored()
-    local flip_offset = self.vertices[3].x - self.vertices[1].x
-    self.sprite = Sprite(new_sprite, self.vertices[1].x, self.vertices[1].y, 64, 0, flip_offset)
-    if is_mirrored then
-        self.sprite:flip()
-    end
 end
 
 -- increase velocity by the given amount, bound by our current run speed
