@@ -87,7 +87,7 @@ function north_city:enter()
 
     -- define player & camera, start em both at the same coordinates
     -- if we don't spawn the player slightly above the ground they clip through sometimes
-    local player_x, player_y = level_width/2, 2766
+    local player_x, player_y = level_width/2, 2760
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
