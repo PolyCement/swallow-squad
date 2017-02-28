@@ -30,7 +30,6 @@ end
 
 -- switch to the given animation
 function AnimatedSprite:setAnimation(name)
-    print(name)
     -- reset, replace, resume
     self.animation:pauseAtStart()
     self.animation = self.animations[name]
