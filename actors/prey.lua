@@ -2,13 +2,9 @@
 local messages = {
     "Finally!",
     "Is this safe?",
-    "Thanks!",
-    "Thank you!",
-    "Thanks...",
     "Cool if I strip first?",
     "<3",
     "What big teeth you have!",
-    "Again?",
     "Help!",
     "Help me!",
     "Nice!",
@@ -16,7 +12,21 @@ local messages = {
     "Please...",
     "My hero!",
     "Room for one more?",
-    "OwO"
+    "Room for another?",
+    "OwO",
+    "Eat me!",
+    "Let me know how I taste!",
+    "I've dreamed about this!",
+    "Just like my dreams!",
+    "Don't digest me...!",
+    "Just... don't digest me.",
+    "Savour me...",
+    "Devour me!",
+    "But how do I get out?",
+    "Can I... y'know... in there?",
+    "Uh? How do we get out?",
+    "Just gobble me up!",
+    "Swallow me already!"
 }
 
 -- tasty!

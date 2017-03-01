@@ -96,7 +96,8 @@ function north_city:enter()
     end
 
     -- define player & camera, start em both at the same coordinates
-    local player_x, player_y = level_width/2, 2767
+    -- something is making the player teleport down sometimes so spawn above the ground
+    local player_x, player_y = level_width/2, 2700
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
@@ -136,7 +137,7 @@ function north_city:enter()
     prey[Taur("assets/taur_fox.png", 2678, 213)] = true
 
     showColliders = false
-    showMousePos = true
+    showMousePos = false
 end
 
 function north_city:update(dt)
@@ -206,12 +207,12 @@ function drawGUI()
     drawBlades()
     local y = love.graphics.getHeight() - 40
     -- draw the clock
-    clock:draw(10, y)
+    clock:draw(12, y)
     -- draw the number of remaining prey
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(gui_font)
     local message = "Survivors: " .. length(prey)
-    love.graphics.print(message, 605, y)
+    love.graphics.print(message, 603, y)
     love.graphics.setColor(255, 255, 255, 255)
 end
 
