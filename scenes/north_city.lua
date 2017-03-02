@@ -20,7 +20,9 @@ local level_height = 3000
 world_colliders = {
     -- world geometry
     -- floor
-    RectangleCollider(0, 2895, level_width, 64, true),
+    -- i made it extra thick so players shouldn't fall through at the start of the game
+    -- todo: figure out how to handle the huge delta time that occurs in the first cycle
+    RectangleCollider(0, 2895, level_width, 800, true),
     -- walls
     RectangleCollider(-64, 0, 64, level_height, true),
     RectangleCollider(level_width, 0, 64, level_height, true),
@@ -97,7 +99,7 @@ function north_city:enter()
 
     -- define player & camera, start em both at the same coordinates
     -- something is making the player teleport down sometimes so spawn above the ground
-    local player_x, player_y = level_width/2, 2700
+    local player_x, player_y = level_width/2, 2767
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
