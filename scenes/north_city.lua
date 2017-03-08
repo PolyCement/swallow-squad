@@ -143,17 +143,26 @@ function north_city:enter()
 end
 
 function north_city:update(dt)
-    -- check if the game should end
-    if length(prey) == 0 then
-        gameEnded = true
-    end
-    if not gameEnded then
-        clock:update(dt)
-        player:update(dt)
-    end
-    camera:lookAt(bind_camera():unpack())
-    for p, _  in pairs(prey) do
-        p:update()
+    -- if dt is too big do multiple updates
+    -- should stop players phasing through the floor
+    -- todo: move this to main.lua?
+    local time_left = dt
+    while time_left > 0 do
+        -- 0.05 should be lenient enough
+        dt = math.min(0.05, time_left)
+        time_left = time_left - dt
+        -- check if the game should end
+        if length(prey) == 0 then
+            gameEnded = true
+        end
+        if not gameEnded then
+            clock:update(dt)
+            player:update(dt)
+        end
+        camera:lookAt(bind_camera():unpack())
+        for p, _  in pairs(prey) do
+            p:update()
+        end
     end
 end
 
