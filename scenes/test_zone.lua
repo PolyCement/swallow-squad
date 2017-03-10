@@ -8,9 +8,22 @@ require "actors.player"
 require "actors.prey"
 require "sprite"
 require "animated_sprite"
+require "scenes.level"
 
 -- test level, for debugging
-test_zone = {}
+test_zone = Level:extend()
+
+local level_width = 4096
+
+local world_colliders = {
+    -- this one is the floor
+    RectangleCollider(0, 544, level_width, 512, true),
+    -- test platform
+    Platform(vector(128, 288), vector(384, 288), vector(384, 352)),
+    -- ramp and box for testing transition between surfaces
+    Collider(true, vector(580, 544), vector(780, 400), vector(780, 544)),
+    RectangleCollider(780, 400, 200, 144, true)
+}
 
 function test_zone:enter()
     -- collision handler
@@ -22,27 +35,16 @@ function test_zone:enter()
     camera = Camera(player_x, player_y)
 
     -- background
-    bg = Sprite("assets/bg_test.png", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+    bg = Sprite("assets/bg_cloud.png", 0, 0)
 
-    -- set gravity
-    gravity = 9.81 * 16
-
-    local level_width = 4096
+    -- set gravity (should this be in main.lua?)
+    gravity = 9.81 * 3 * 16
 
     -- define level geometry
     world = {}
-    -- this one is the floor
-    world[RectangleCollider(0, 544, level_width, 512, true)] = true
-    -- these aren't the floor
-    world[RectangleCollider(640, 416, 128, 128, true)] = true
-    local platform = Platform(vector(128, 288), vector(384, 288), vector(384, 352))
-    platform.platform = true
-    world[platform] = true
-    world[RectangleCollider(1024, 128, 256, 416, true)] = true
-    world[RectangleCollider(896, 128, 128, 64, true)] = true
-    world[RectangleCollider(768, 192, 256, 352, true)] = true
-    -- triangles?
-    world[Collider(true, vector(1024, 128), vector(1280, 0), vector(1280, 128))] = true
+    for _, collider in pairs(world_colliders) do
+        world[collider] = true
+    end
 
     -- register level geometry with collision handler
     for v, _ in pairs(world) do
@@ -57,6 +59,7 @@ function test_zone:enter()
 
     -- toggles drawing of colliders
     showColliders = true
+    showMousePos = true
 end
 
 function test_zone:update(dt)

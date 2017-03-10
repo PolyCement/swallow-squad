@@ -62,8 +62,8 @@ side = {
 -- execute the callback function of any colliding objects
 -- returns the delta resulting from collisions with the environment
 function CollisionHandler:checkCollision(obj)
-    local correction_delta = vector(0, 0)
     local num_collisions = 0
+    local all_mtds_x, all_mtds_y = {}, {}
     for collider, _ in pairs(self.colliders) do
         -- the side of obj that made contact
         local colliding_side = nil
@@ -71,8 +71,10 @@ function CollisionHandler:checkCollision(obj)
         local mtd = checkCollision(obj, collider)
         if mtd then
             num_collisions = num_collisions + 1
+            -- record the mtd for solid colliders
             if collider:isSolid() then
-                correction_delta = correction_delta + mtd
+                table.insert(all_mtds_x, mtd.x)
+                table.insert(all_mtds_y, mtd.y)
             end
             -- maybe this should be in player
             -- figure out which axis we're being pushed in hardest
@@ -100,7 +102,27 @@ function CollisionHandler:checkCollision(obj)
             collider:onCollision(obj, -colliding_side, mtd)
         end
     end
-    return correction_delta
+    -- only apply the biggest mtd in each dimension
+    local correction_vector_x = 0
+    if table.length(all_mtds_x) > 0 then
+        correction_vector_x = largestMagnitude(all_mtds_x)
+    end
+    local correction_vector_y = 0
+    if table.length(all_mtds_y) > 0 then
+        correction_vector_y = largestMagnitude(all_mtds_y)
+    end
+    return vector(correction_vector_x, correction_vector_y)
+end
+
+-- returns the value of largest magnitude in a table of numbers
+function largestMagnitude(x)
+    local max = math.max(unpack(x))
+    local min = math.min(unpack(x))
+    if max > math.abs(min) then
+        return max
+    else
+        return min
+    end
 end
 
 -- checks if the given colliders are, uh, colliding

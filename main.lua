@@ -3,6 +3,16 @@ require "scenes.test_zone"
 require "scenes.main_menu"
 require "scenes.north_city"
 
+-- fun with monkey patches, i can't believe i have to define this myself
+-- this should probably go somewhere else
+function table.length(t)
+    local count = 0
+    for _ in pairs(t) do
+        count = count + 1
+    end
+    return count
+end
+
 function love.load()
     Gamestate.registerEvents()
     Gamestate.switch(main_menu)

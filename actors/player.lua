@@ -15,7 +15,7 @@ local MIN_SPEED = MAX_SPEED * .5
 local SPEED_PENALTY = (MAX_SPEED - MIN_SPEED) / MAX_CAPACITY
 
 -- acceleration constants
-local MAX_ACCELERATION = 16 * METER
+local MAX_ACCELERATION = 32 * METER
 local MIN_ACCELERATION = MAX_ACCELERATION * .5
 local ACC_PENALTY = (MAX_ACCELERATION - MIN_ACCELERATION) / MAX_CAPACITY
 
@@ -124,8 +124,7 @@ function Player:update(dt)
     end
 
     -- update pos
-    -- we're using double gravity cos at this scale standard gravity is super floaty
-    self.velocity.y = self.velocity.y + gravity * 3 * dt
+    self.velocity.y = self.velocity.y + gravity * dt
     local delta = self.velocity * dt
 
     -- attempt to move

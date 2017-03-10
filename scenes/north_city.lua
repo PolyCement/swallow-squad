@@ -9,9 +9,10 @@ require "actors.prey"
 require "sprite"
 require "animated_sprite"
 require "clock"
+require "scenes.level"
 
 -- level 1, north city
-north_city = {}
+north_city = Level:extend()
 
 -- todo: figure out somewhere better to put this
 local level_width = 5000
@@ -20,8 +21,6 @@ local level_height = 3000
 world_colliders = {
     -- world geometry
     -- floor
-    -- i made it extra thick so players shouldn't fall through at the start of the game
-    -- todo: figure out how to handle the huge delta time that occurs in the first cycle
     RectangleCollider(0, 2895, level_width, 800, true),
     -- walls
     RectangleCollider(-64, 0, 64, level_height, true),
@@ -116,7 +115,8 @@ function north_city:enter()
     blade = love.graphics.newImage("assets/gui_blade.png")
 
     -- set gravity
-    gravity = 9.81 * 16
+    -- we're using triple gravity cos at this scale standard gravity is super floaty
+    gravity = 9.81 * 3 * 16
 
     -- the clock
     clock = Clock()
@@ -152,7 +152,7 @@ function north_city:update(dt)
         dt = math.min(0.05, time_left)
         time_left = time_left - dt
         -- check if the game should end
-        if length(prey) == 0 then
+        if table.length(prey) == 0 then
             gameEnded = true
         end
         if not gameEnded then
@@ -164,15 +164,6 @@ function north_city:update(dt)
             p:update()
         end
     end
-end
-
--- i can't believe i have to define this myself
-function length(t)
-    local count = 0
-    for _ in pairs(t) do
-        count = count + 1
-    end
-    return count
 end
 
 function north_city:draw()
@@ -222,7 +213,7 @@ function drawGUI()
     -- draw the number of remaining prey
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(gui_font)
-    local message = "Survivors: " .. length(prey)
+    local message = "Survivors: " .. table.length(prey)
     love.graphics.print(message, 603, y)
     love.graphics.setColor(255, 255, 255, 255)
 end
@@ -247,17 +238,6 @@ end
 
 function north_city:keyreleased(key)
     player:keyReleased(key)
-end
-
--- debug: prints the coordinate under the cursor
--- mostly it's just so i know where to place world geometry
-function north_city:mousemoved(x, y)
-    if showMousePos then
-        local adjusted_x = x - love.graphics.getWidth() / 2
-        local adjusted_y = y - love.graphics.getHeight() / 2
-        local cam_x, cam_y = camera:position()
-        print(math.floor(adjusted_x + cam_x), math.floor(adjusted_y + cam_y))
-    end
 end
 
 -- restrain the camera to within the playable area
