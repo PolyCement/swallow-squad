@@ -20,6 +20,7 @@ local messages = {
     "Just like my dreams!",
     "Don't digest me...!",
     "Just... don't digest me.",
+    "Save me!",
     "Savour me...",
     "Devour me!",
     "But how do I get out?",
