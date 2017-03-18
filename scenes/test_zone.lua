@@ -1,13 +1,13 @@
 Object = require "lib.classic"
 Camera = require "lib.hump.camera"
 vector = require "lib.hump.vector"
-require "collision_handler"
+require "engine.collision_handler"
 require "colliders.collider"
 require "colliders.platform"
 require "actors.player"
 require "actors.prey"
-require "sprite"
-require "animated_sprite"
+require "engine.sprite"
+require "engine.animated_sprite"
 require "scenes.level"
 
 -- test level, for debugging
@@ -28,6 +28,7 @@ local world_colliders = {
 function test_zone:enter()
     -- collision handler
     collisionHandler = CollisionHandler()
+    initGeometry(world_colliders)
 
     -- define player & camera, start em both at the same coordinates
     local player_x, player_y = 100, 416
@@ -40,17 +41,6 @@ function test_zone:enter()
     -- set gravity (should this be in main.lua?)
     gravity = 9.81 * 3 * 16
 
-    -- define level geometry
-    world = {}
-    for _, collider in pairs(world_colliders) do
-        world[collider] = true
-    end
-
-    -- register level geometry with collision handler
-    for v, _ in pairs(world) do
-        collisionHandler:add(v)
-    end
-
     -- survivors
     prey = {}
     for idx = 1, 12 do
@@ -58,7 +48,6 @@ function test_zone:enter()
     end
 
     -- toggles drawing of colliders
-    showColliders = true
     showMousePos = true
 end
 
@@ -76,10 +65,8 @@ function test_zone:draw()
     -- draw the bg before attaching the camera to give a skybox effect
     bg:draw()
     camera:attach()
-    -- draw world geometry
-    for o, _ in pairs(world) do
-        o:draw()
-    end
+    -- draw world colliders
+    collisionHandler:draw()
     -- draw all prey
     for p, _  in pairs(prey) do
         p:draw()

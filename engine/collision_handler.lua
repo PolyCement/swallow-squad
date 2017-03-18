@@ -15,6 +15,13 @@ function CollisionHandler:remove(collider)
     self.colliders[collider] = nil
 end
 
+-- draw all collision boxes
+function CollisionHandler:draw()
+    for c, _ in pairs(self.colliders) do
+        c:drawBoundingBox()
+    end
+end
+
 -- cast a ray and see what it hits
 function CollisionHandler:raycast(ray_start, ray_end)
     -- check all segments of all shapes for an intersect

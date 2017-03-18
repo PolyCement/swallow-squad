@@ -39,30 +39,29 @@ function Collider:new(solid, ...)
     end
 end
 
-function Collider:draw()
-    if showColliders then
-        local r, g, b, a = love.graphics.getColor()
-        love.graphics.setColor(255, 0, 0, 255)
-        -- shove all coordinates in a table
-        local vertices = {}
-        for _, v in pairs(self.vertices) do
-            table.insert(vertices, v.x)
-            table.insert(vertices, v.y)
-        end
-        -- we need at least 3 points to draw a polygon
-        if #vertices < 6 then
-            love.graphics.line(unpack(vertices))
-        else
-            love.graphics.polygon("line", unpack(vertices))
-        end
-        love.graphics.setColor(r, g, b, a)
+-- draw the collider's bounding box
+function Collider:drawBoundingBox()
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(255, 0, 0, 255)
+    -- shove all coordinates in a table
+    local vertices = {}
+    for _, v in pairs(self.vertices) do
+        table.insert(vertices, v.x)
+        table.insert(vertices, v.y)
     end
+    -- we need at least 3 points to draw a polygon
+    if #vertices < 6 then
+        love.graphics.line(unpack(vertices))
+    else
+        love.graphics.polygon("line", unpack(vertices))
+    end
+    love.graphics.setColor(r, g, b, a)
 end
 
 -- move by the requested amount, correct our position if we hit something
 function Collider:move(delta)
-    self:movementHelper(delta)
-    local correction_delta = collisionHandler:checkCollision(self)
+self:movementHelper(delta)
+local correction_delta = collisionHandler:checkCollision(self)
     self:movementHelper(correction_delta)
 end
 

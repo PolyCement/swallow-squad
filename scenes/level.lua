@@ -12,3 +12,12 @@ function Level:mousemoved(x, y)
         print(math.floor(adjusted_x + cam_x), math.floor(adjusted_y + cam_y))
     end
 end
+
+-- loads map geometry into the collision handler
+-- eventually this will load geometry from a file instead of being passed a table
+function initGeometry(colliders)
+    -- register level geometry with collision handler
+    for _, v in pairs(colliders) do
+        collisionHandler:add(v)
+    end
+end

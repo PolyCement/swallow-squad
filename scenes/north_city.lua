@@ -1,20 +1,20 @@
 Object = require "lib.classic"
 Camera = require "lib.hump.camera"
 vector = require "lib.hump.vector"
-require "collision_handler"
+require "engine.collision_handler"
 require "colliders.collider"
 require "colliders.platform"
 require "actors.player"
 require "actors.prey"
-require "sprite"
-require "animated_sprite"
+require "engine.sprite"
+require "engine.animated_sprite"
 require "clock"
 require "scenes.level"
 
 -- level 1, north city
 north_city = Level:extend()
 
--- todo: figure out somewhere better to put this
+-- todo: figure out somewhere better to put this (csv file? json?)
 local level_width = 5000
 local level_height = 3000
 
@@ -82,19 +82,9 @@ world_colliders = {
 }
 
 function north_city:enter()
-    -- collision handler
+    -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
-
-    -- define level geometry
-    world = {}
-    for _, collider in pairs(world_colliders) do
-        world[collider] = true
-    end
-
-    -- register level geometry with collision handler
-    for v, _ in pairs(world) do
-        collisionHandler:add(v)
-    end
+    initGeometry(world_colliders)
 
     -- define player & camera, start em both at the same coordinates
     -- something is making the player teleport down sometimes so spawn above the ground
@@ -171,9 +161,9 @@ function north_city:draw()
     clouds:draw()
     camera:attach()
     bg:draw()
-    -- draw world geometry
-    for o, _ in pairs(world) do
-        o:draw()
+    -- draw world colliders
+    if showColliders then
+        collisionHandler:draw()
     end
     -- draw all prey
     for p, _  in pairs(prey) do

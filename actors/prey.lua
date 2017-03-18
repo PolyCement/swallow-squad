@@ -85,7 +85,6 @@ function Prey:draw()
         love.graphics.print(self.message, shout_pos.x, shout_pos.y)
         love.graphics.setColor(255, 255, 255, 255)
     end
-    Prey.super.draw(self)
     self.sprite:draw()
 end
 

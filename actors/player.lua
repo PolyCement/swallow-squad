@@ -148,7 +148,6 @@ function Player:setAnimation(name)
 end
 
 function Player:draw()
-    Player.super.draw(self)
     self.sprite:draw()
 end
 
