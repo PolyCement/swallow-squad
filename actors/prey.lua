@@ -31,15 +31,16 @@ local messages = {
 }
 
 -- tasty!
-Prey = RectangleCollider:extend()
+Prey = Collider:extend()
 
 local font = love.graphics.newFont(12)
 
 function Prey:new(image, x, y)
-    -- define the sprite first so we can use its dimensions to set our own
+    -- define the sprite first, then use its dimensions to determine our vertices
     self.sprite = Sprite(image, x, y, 1, 1)
-    Prey.super.new(self, x, y, self.sprite:getWidth()-2, self.sprite:getHeight()-2)
-    self.solid = false
+    local x2 = x + self.sprite:getWidth() - 2
+    local y2 = y + self.sprite:getHeight() - 2
+    Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
     -- how heavy are we
     self.weight = 1
     -- are we yelling?

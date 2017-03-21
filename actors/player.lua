@@ -1,5 +1,5 @@
 -- rrerr
-Player = RectangleCollider:extend()
+Player = Collider:extend()
 
 -- pixels per meter
 -- use this to specify things in meters rather than pixels
@@ -10,7 +10,7 @@ local METER = 16
 local MAX_CAPACITY = 12
 
 -- speed constants
-local MAX_SPEED = 16 * METER
+local MAX_SPEED = 20 * METER
 local MIN_SPEED = MAX_SPEED * .5
 local SPEED_PENALTY = (MAX_SPEED - MIN_SPEED) / MAX_CAPACITY
 
@@ -32,7 +32,9 @@ local JIGGLE_PREVENTION = 5
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
     local width = 32
-    Player.super.new(self, x, y, width, 128)
+    local x2 = x + width
+    local y2 = y + 128
+    Player.super.new(self, true, x, y, x2, y, x2, y2, x, y2)
     -- sprite
     self.sprite = AnimatedSprite(130, 152, "assets/swallow.png",
                                  self.vertices[1].x, self.vertices[1].y, 65, 23, width)

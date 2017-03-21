@@ -45,10 +45,6 @@ function loadGeometry(filename)
             elseif fields[1] == "p" then
                 -- one-way platform
                 collisionHandler:add(Platform(unpack(fields, 2)))
-            elseif fields[1] == "r" then
-                -- rectangular collider
-                table.insert(fields, true)
-                collisionHandler:add(RectangleCollider(unpack(fields, 2)))
             end
         end
     end
