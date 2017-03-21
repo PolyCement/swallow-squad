@@ -23,15 +23,15 @@ end
 Collider = Object:extend()
 
 -- assumes clockwise winding
+-- first arg denotes solidity, the rest are alternating x and y coords of each vertex
 function Collider:new(solid, ...)
-    -- "false or true" is true so i got this workaround
-    if solid == nil then
-        self.solid = true
-    else
-        self.solid = solid
-    end
+    self.solid = solid
     -- store coordinates as vertices
-    self.vertices = {...}
+    local args = {...}
+    self.vertices = {}
+    for i = 1, #args, 2 do
+        table.insert(self.vertices, vector(args[i], args[i+1]))
+    end
     -- create edges
     self.edges = {}
     for i = 1, #self.vertices do
@@ -60,8 +60,8 @@ end
 
 -- move by the requested amount, correct our position if we hit something
 function Collider:move(delta)
-self:movementHelper(delta)
-local correction_delta = collisionHandler:checkCollision(self)
+    self:movementHelper(delta)
+    local correction_delta = collisionHandler:checkCollision(self)
     self:movementHelper(correction_delta)
 end
 
@@ -112,7 +112,7 @@ RectangleCollider = Collider:extend()
 function RectangleCollider:new(x, y, width, height, solid)
     local x2 = x + width
     local y2 = y + height
-    RectangleCollider.super.new(self, solid, vector(x, y), vector(x2, y), vector(x2, y2), vector(x, y2))
+    RectangleCollider.super.new(self, solid, x, y, x2, y, x2, y2, x, y2)
 end
 
 function RectangleCollider:__tostring()

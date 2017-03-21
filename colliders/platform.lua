@@ -2,8 +2,8 @@
 Platform = Collider:extend()
 
 -- assumes b is to the right of a
-function Platform:new(a, b)
-    Platform.super.new(self, true, a, b) 
+function Platform:new(a_x, a_y, b_x, b_y)
+    Platform.super.new(self, true, a_x, a_y, b_x, b_y) 
 end
 
 -- platforms are only solid if the player was above them on the previous cycle

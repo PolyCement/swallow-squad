@@ -13,11 +13,44 @@ function Level:mousemoved(x, y)
     end
 end
 
+-- monkey patch to add something resembling python's startswith
+function string.starts(str, sub_str)
+   return string.sub(str, 1, string.len(sub_str)) == sub_str
+end
+
+-- and another to add a split function
+function string.split(str, delimiter)
+    local delimiter, fields = delimiter or ",", {}
+    local pattern = "([^" .. delimiter.. "]+)"
+    string.gsub(str, pattern, function(x) table.insert(fields, x) end)
+    return fields
+end
+
 -- loads map geometry into the collision handler
--- eventually this will load geometry from a file instead of being passed a table
-function initGeometry(colliders)
-    -- register level geometry with collision handler
-    for _, v in pairs(colliders) do
-        collisionHandler:add(v)
+function loadGeometry(filename)
+    -- open the file
+    f = io.open(filename, "r")
+    for line in f:lines() do
+        -- treat lines starting with # as a comment (ie. skip it)
+        if not string.starts(line, "#") then
+            -- read the fields to a table
+            local fields = string.split(line)
+            for idx = 2, #fields do
+                fields[idx] = tonumber(fields[idx])
+            end
+            -- the first field determines the collider type
+            if fields[1] == "c" then
+                -- standard collider
+                collisionHandler:add(Collider(true, unpack(fields, 2)))
+            elseif fields[1] == "p" then
+                -- one-way platform
+                collisionHandler:add(Platform(unpack(fields, 2)))
+            elseif fields[1] == "r" then
+                -- rectangular collider
+                table.insert(fields, true)
+                collisionHandler:add(RectangleCollider(unpack(fields, 2)))
+            end
+        end
     end
+    f:close()
 end

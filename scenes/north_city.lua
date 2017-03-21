@@ -14,81 +14,14 @@ require "scenes.level"
 -- level 1, north city
 north_city = Level:extend()
 
--- todo: figure out somewhere better to put this (csv file? json?)
-local level_width = 5000
-local level_height = 3000
-
-world_colliders = {
-    -- world geometry
-    -- floor
-    RectangleCollider(0, 2895, level_width, 800, true),
-    -- walls
-    RectangleCollider(-64, 0, 64, level_height, true),
-    RectangleCollider(level_width, 0, 64, level_height, true),
-    -- train track
-    Platform(vector(677, 2734), vector(1164, 2734)),
-    Platform(vector(2023, 2734), vector(3264, 2734)),
-    Platform(vector(4649, 2734), vector(level_width, 2734)),
-    -- generic buildings on left (shortest to tallest)
-    Platform(vector(0, 2577), vector(677, 2577)),
-    Platform(vector(545, 2453), vector(1227, 2453)),
-    Platform(vector(58, 1857), vector(768, 1857)),
-    Platform(vector(893, 1417), vector(1487, 1417)),
-    Platform(vector(69, 1170), vector(757, 1170)),
-    Platform(vector(515, 1056), vector(714, 1056)),
-    Platform(vector(342, 895), vector(971, 895)),
-    -- old warehouse
-    Platform(vector(1158, 2530), vector(2028, 2530)),
-    -- sloped building
-    Platform(vector(409, 2328), vector(1740, 1796)),
-    Platform(vector(1740, 1572), vector(1855, 1572)),
-    Platform(vector(1855, 1600), vector(2333, 1408)),
-    -- generic buildings on right (shortest to tallest)
-    Platform(vector(3264, 2477), vector(3951, 2477)),
-    Platform(vector(3951, 2160), vector(4326, 2160)),
-    Platform(vector(4007, 2127), vector(4096, 2127)),
-    Platform(vector(4230, 1929), vector(4772, 1929)),
-    Platform(vector(2933, 1031), vector(3623, 1031)),
-    -- old busted up building
-    Platform(vector(4326, 2335), vector(4655, 2335)),
-    -- fence
-    Platform(vector(4326, 2826), vector(4345, 2826)),
-    Platform(vector(4407, 2826), vector(4699, 2826)),
-    -- slope-topped building on right
-    Platform(vector(4327, 1037), vector(4378, 1037)),
-    Platform(vector(4378, 1037), vector(4866, 873)),
-    Platform(vector(4866, 873), vector(4919, 873)),
-    Platform(vector(4378, 669), vector(4866, 832)),
-    -- weird building on right
-    Platform(vector(3355, 1579), vector(4201, 1579)),
-    Platform(vector(3397, 1385), vector(4161, 1385)),
-    Platform(vector(3438, 1347), vector(4120, 1347)),
-    -- building w/ crane
-    Platform(vector(1053, 721), vector(1735, 721)),
-    Platform(vector(1520, 690), vector(1547, 690)),
-    Platform(vector(1533, 690), vector(1944, 288)),
-    -- crane
-    Platform(vector(3411, 500), vector(3956, 500)),
-    Platform(vector(3956, 500), vector(3992, 536)),
-    Platform(vector(3992, 536), vector(4234, 536)),
-    -- central building
-    Platform(vector(2159, 252), vector(2651, 154)),
-    Platform(vector(2651, 252), vector(2728, 252)),
-    Platform(vector(2728, 154), vector(3223, 252)),
-    -- girders
-    -- todo: make these ones move
-    Platform(vector(1870, 1241), vector(2038, 1241)),
-    Platform(vector(3357, 830), vector(3526, 830))
-}
-
 function north_city:enter()
     -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
-    initGeometry(world_colliders)
+    loadGeometry("scenes/north_city.csv")
 
     -- define player & camera, start em both at the same coordinates
     -- something is making the player teleport down sometimes so spawn above the ground
-    local player_x, player_y = level_width/2, 2767
+    local player_x, player_y = 2500, 2767
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 

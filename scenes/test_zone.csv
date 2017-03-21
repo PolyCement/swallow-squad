@@ -1,0 +1,7 @@
+# floor
+r,0,544,4096,512
+# platform
+p,128,288,384,288
+# ramp and box for testing transition between surfaces
+c,580,544,780,400,780,544
+r,780,400,200,144

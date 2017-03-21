@@ -13,22 +13,10 @@ require "scenes.level"
 -- test level, for debugging
 test_zone = Level:extend()
 
-local level_width = 4096
-
-local world_colliders = {
-    -- this one is the floor
-    RectangleCollider(0, 544, level_width, 512, true),
-    -- test platform
-    Platform(vector(128, 288), vector(384, 288), vector(384, 352)),
-    -- ramp and box for testing transition between surfaces
-    Collider(true, vector(580, 544), vector(780, 400), vector(780, 544)),
-    RectangleCollider(780, 400, 200, 144, true)
-}
-
 function test_zone:enter()
     -- collision handler
     collisionHandler = CollisionHandler()
-    initGeometry(world_colliders)
+    loadGeometry("scenes/test_zone.csv")
 
     -- define player & camera, start em both at the same coordinates
     local player_x, player_y = 100, 416
