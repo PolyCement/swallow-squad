@@ -1,6 +1,7 @@
--- an animated sprite
+require "engine.sprite"
 anim8 = require "lib.anim8"
 
+-- an animated sprite
 AnimatedSprite = Sprite:extend()
 
 function AnimatedSprite:new(frame_width, frame_height, ...)

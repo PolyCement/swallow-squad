@@ -1,3 +1,6 @@
+require "colliders.collider"
+require "engine.sprite"
+
 -- messages yelled by prey
 local messages = {
     "Finally!",

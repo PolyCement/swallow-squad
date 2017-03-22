@@ -1,3 +1,6 @@
+require "colliders.collider"
+require "engine.animated_sprite"
+
 -- rrerr
 Player = Collider:extend()
 
@@ -235,7 +238,7 @@ function Player:move(delta)
             back_corner = self.vertices[4]
         end
         -- 5 is a pretty long beam but required to handle slopes up to ~45 degrees while empty
-        local ray_end = back_corner + vector(0, 5)
+        local ray_end = back_corner + vector(0, 8)
         local collisions = collisionHandler:raycast(back_corner, ray_end)
         -- if there's a platform close to the player's feet, pull em down
         if #collisions > 0 then

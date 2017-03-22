@@ -1,3 +1,5 @@
+Object = require "lib.classic"
+
 -- a polygonal collider
 -- should an object collide with other objects? then it should extend this!
 

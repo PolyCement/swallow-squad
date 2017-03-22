@@ -1,7 +1,34 @@
+Object = require "lib.classic"
+Camera = require "lib.hump.camera"
+require "engine.collision_handler"
+require "colliders.collider"
+require "colliders.platform"
+require "actors.player"
+
 -- stuff common to all levels will end up here once i figure out what that actually is
--- maybe it should be some kind of template rather than a class
 -- levels should extend this
 Level = Object:extend()
+
+-- initalise the level
+function Level:new(filename, player_x, player_y)
+    -- create collision handler and initialise with world geometry
+    collisionHandler = CollisionHandler()
+    loadGeometry(filename)
+
+    -- define player & camera, start em both at the same coordinates
+    player = Player(player_x, player_y)
+    camera = Camera(player_x, player_y)
+
+    -- set gravity
+    gravity = 9.81 * 3 * 16
+
+    -- has the game finished?
+    gameEnded = false
+
+    -- toggles drawing of colliders
+    showColliders = false
+    showMousePos = false
+end
 
 -- debug: prints the coordinate under the cursor (for placing world geometry)
 function Level:mousemoved(x, y)

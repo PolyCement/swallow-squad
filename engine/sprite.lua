@@ -1,3 +1,5 @@
+Object = require "lib.classic"
+
 -- it's a sprite,
 Sprite = Object:extend()
 

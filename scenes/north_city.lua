@@ -1,13 +1,6 @@
-Object = require "lib.classic"
-Camera = require "lib.hump.camera"
 vector = require "lib.hump.vector"
-require "engine.collision_handler"
-require "colliders.collider"
-require "colliders.platform"
-require "actors.player"
 require "actors.prey"
 require "engine.sprite"
-require "engine.animated_sprite"
 require "clock"
 require "scenes.level"
 
@@ -15,15 +8,8 @@ require "scenes.level"
 north_city = Level:extend()
 
 function north_city:enter()
-    -- create collision handler and initialise with world geometry
-    collisionHandler = CollisionHandler()
-    loadGeometry("scenes/north_city.csv")
-
-    -- define player & camera, start em both at the same coordinates
-    -- something is making the player teleport down sometimes so spawn above the ground
-    local player_x, player_y = 2500, 2767
-    player = Player(player_x, player_y)
-    camera = Camera(player_x, player_y)
+    -- initialize geometry and player position
+    north_city.super.new(self, "scenes/north_city.csv", 2500, 2767)
 
     -- set the background to grey
     love.graphics.setBackgroundColor(230, 230, 230)
@@ -37,15 +23,8 @@ function north_city:enter()
     -- gui blade
     blade = love.graphics.newImage("assets/gui_blade.png")
 
-    -- set gravity
-    -- we're using triple gravity cos at this scale standard gravity is super floaty
-    gravity = 9.81 * 3 * 16
-
     -- the clock
     clock = Clock()
-
-    -- has the game finished?
-    gameEnded = false
 
     -- survivors
     prey = {}
@@ -60,9 +39,6 @@ function north_city:enter()
     prey[Prey("assets/prey_wolf.png", 250, 2545)] = true
     -- here comes a special boy!
     prey[Taur("assets/taur_fox.png", 2678, 213)] = true
-
-    showColliders = false
-    showMousePos = false
 end
 
 function north_city:update(dt)

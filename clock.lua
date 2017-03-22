@@ -1,3 +1,5 @@
+Object = require "lib.classic"
+
 -- the game clock
 local font = love.graphics.newFont(28)
 

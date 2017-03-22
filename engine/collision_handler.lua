@@ -1,3 +1,5 @@
+Object = require "lib.classic"
+
 -- handles collisions
 CollisionHandler = Object:extend()
 
