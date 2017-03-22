@@ -9,6 +9,9 @@ test_zone = Level:extend()
 function test_zone:enter()
     -- initialize geometry and player position
     test_zone.super.new(self, "scenes/test_zone.csv", 100, 416)
+    
+    -- show colliders cos we're in the void
+    showColliders = true
 
     -- background
     bg = Sprite("assets/bg_cloud.png", 0, 0)
@@ -35,19 +38,13 @@ function test_zone:draw()
     bg:draw()
     camera:attach()
     -- draw world colliders
-    collisionHandler:draw()
+    if showColliders then
+        collisionHandler:draw()
+    end
     -- draw all prey
     for p, _  in pairs(prey) do
         p:draw()
     end
     player:draw()
     camera:detach()
-end
-
-function test_zone:keypressed(key)
-    player:keyPressed(key)
-end
-
-function test_zone:keyreleased(key)
-    player:keyReleased(key)
 end

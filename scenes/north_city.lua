@@ -125,20 +125,6 @@ function drawBlades()
     love.graphics.draw(blade, love.graphics.getWidth(), y, 0, -1, 1)
 end
 
-function north_city:keypressed(key)
-    if gameEnded then
-        if key == "return" then
-            Gamestate.switch(main_menu)
-        end
-    else
-        player:keyPressed(key)
-    end
-end
-
-function north_city:keyreleased(key)
-    player:keyReleased(key)
-end
-
 -- restrain the camera to within the playable area
 function bind_camera()
     local camera_pos = player:getPos()

@@ -35,7 +35,7 @@ function main_menu:keypressed(key)
     if key == "return" then
         Gamestate.switch(north_city)
     -- secret!
-    elseif key == "t" then
+    elseif debug and key == "t" then
         Gamestate.switch(test_zone)
     end
 end

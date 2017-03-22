@@ -9,7 +9,7 @@ require "actors.player"
 -- levels should extend this
 Level = Object:extend()
 
--- initalise the level
+-- initialise the level
 function Level:new(filename, player_x, player_y)
     -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
@@ -28,6 +28,29 @@ function Level:new(filename, player_x, player_y)
     -- toggles drawing of colliders
     showColliders = false
     showMousePos = false
+end
+
+function Level:keypressed(key)
+    -- debug stuff
+    if debug then
+        if key == "c" then
+            showColliders = not showColliders
+        elseif key == "m" then
+            showMousePos = not showMousePos
+        end
+    end
+    -- if the game has ended ignore everything but enter
+    if gameEnded then
+        if key == "return" then
+            Gamestate.switch(main_menu)
+        end
+    else
+        player:keyPressed(key)
+    end
+end
+
+function Level:keyreleased(key)
+    player:keyReleased(key)
 end
 
 -- debug: prints the coordinate under the cursor (for placing world geometry)

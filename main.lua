@@ -14,6 +14,13 @@ function table.length(t)
 end
 
 function love.load()
+    -- handle args
+    debug = false
+    for _, a in pairs(arg) do
+        if a == "-d" or a == "--debug" then
+            debug = true
+        end
+    end
     Gamestate.registerEvents()
     Gamestate.switch(main_menu)
 end
