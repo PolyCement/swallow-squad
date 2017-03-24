@@ -23,16 +23,6 @@ function test_zone:enter()
     end
 end
 
-function test_zone:update(dt)
-    player:update(dt)
-    -- have the camera follow the player
-    camera:lookAt(player:getPos():unpack())
-    -- update prey (shout)
-    for p, _  in pairs(prey) do
-        p:update()
-    end
-end
-
 function test_zone:draw()
     -- draw the bg before attaching the camera to give a skybox effect
     bg:draw()

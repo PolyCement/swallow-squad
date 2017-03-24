@@ -1,7 +1,6 @@
 vector = require "lib.hump.vector"
 require "actors.prey"
 require "engine.sprite"
-require "clock"
 require "scenes.level"
 
 -- level 1, north city
@@ -9,7 +8,7 @@ north_city = Level:extend()
 
 function north_city:enter()
     -- initialize geometry and player position
-    north_city.super.new(self, "scenes/north_city.csv", 2500, 2767)
+    north_city.super.new(self, "scenes/north_city.csv", 2500, 2767, 5000, 3050)
 
     -- set the background to grey
     love.graphics.setBackgroundColor(230, 230, 230)
@@ -22,9 +21,6 @@ function north_city:enter()
 
     -- gui blade
     blade = love.graphics.newImage("assets/gui_blade.png")
-
-    -- the clock
-    clock = Clock()
 
     -- survivors
     prey = {}
@@ -41,28 +37,12 @@ function north_city:enter()
     prey[Taur("assets/taur_fox.png", 2678, 213)] = true
 end
 
-function north_city:update(dt)
-    -- if dt is too big do multiple updates
-    -- should stop players phasing through the floor
-    -- todo: move this to main.lua?
-    local time_left = dt
-    while time_left > 0 do
-        -- 0.05 should be lenient enough
-        dt = math.min(0.05, time_left)
-        time_left = time_left - dt
-        -- check if the game should end
-        if table.length(prey) == 0 then
-            gameEnded = true
-        end
-        if not gameEnded then
-            clock:update(dt)
-            player:update(dt)
-        end
-        camera:lookAt(bind_camera():unpack())
-        for p, _  in pairs(prey) do
-            p:update()
-        end
+-- checks if the game has ended
+function north_city:gameEnded()
+    if table.length(prey) == 0 then
+        return true
     end
+    return false
 end
 
 function north_city:draw()
@@ -81,7 +61,7 @@ function north_city:draw()
     player:draw()
     camera:detach()
     -- draw the timer
-    if gameEnded then
+    if self:gameEnded() then
         drawEndMessage()
     else
         drawGUI()
@@ -123,22 +103,4 @@ function drawBlades()
     love.graphics.draw(blade, 0, y)
     -- right blade
     love.graphics.draw(blade, love.graphics.getWidth(), y, 0, -1, 1)
-end
-
--- restrain the camera to within the playable area
-function bind_camera()
-    local camera_pos = player:getPos()
-    local min_cam_bound_x = love.graphics.getWidth() / 2
-    local max_cam_bound_x = bg:getWidth() - love.graphics.getWidth() / 2
-    local cam_bound_y = bg:getHeight() - 100 - love.graphics.getHeight() / 2
-    if camera_pos.y > cam_bound_y then
-        camera_pos.y = cam_bound_y
-    end
-    if camera_pos.x < min_cam_bound_x then
-        camera_pos.x = min_cam_bound_x
-    end
-    if camera_pos.x > max_cam_bound_x then
-        camera_pos.x = max_cam_bound_x
-    end
-    return camera_pos
 end

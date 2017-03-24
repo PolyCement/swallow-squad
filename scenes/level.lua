@@ -3,6 +3,7 @@ Camera = require "lib.hump.camera"
 require "engine.collision_handler"
 require "colliders.collider"
 require "colliders.platform"
+require "engine.clock"
 require "actors.player"
 
 -- stuff common to all levels will end up here once i figure out what that actually is
@@ -10,7 +11,7 @@ require "actors.player"
 Level = Object:extend()
 
 -- initialise the level
-function Level:new(filename, player_x, player_y)
+function Level:new(filename, player_x, player_y, width, height)
     -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
     loadGeometry(filename)
@@ -19,15 +20,36 @@ function Level:new(filename, player_x, player_y)
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
+    -- level width and height (for restricting camera)
+    self.width = width
+    self.height = height
+
+    -- the clock
+    clock = Clock()
+
     -- set gravity
     gravity = 9.81 * 3 * 16
-
-    -- has the game finished?
-    gameEnded = false
 
     -- toggles drawing of colliders
     showColliders = false
     showMousePos = false
+end
+
+function Level:update(dt)
+    -- update stuff if the game hasn't ended
+    if not self:gameEnded() then
+        clock:update(dt)
+        player:update(dt)
+        camera:lookAt(bindCamera(self.width, self.height):unpack())
+        for p, _  in pairs(prey) do
+            p:update()
+        end
+    end
+end
+
+-- by default the ride never ends
+function Level:gameEnded()
+    return false
 end
 
 function Level:keypressed(key)
@@ -40,7 +62,7 @@ function Level:keypressed(key)
         end
     end
     -- if the game has ended ignore everything but enter
-    if gameEnded then
+    if self:gameEnded() then
         if key == "return" then
             Gamestate.switch(main_menu)
         end
@@ -99,4 +121,28 @@ function loadGeometry(filename)
         end
     end
     f:close()
+end
+
+-- restrain the camera to stay between (0, 0) and (width, height)
+-- don't bind on nil dimensions
+-- todo: make this suck less
+function bindCamera(width, height)
+    local camera_pos = player:getPos()
+    if width then
+        local min_cam_bound_x = love.graphics.getWidth() / 2
+        local max_cam_bound_x = width - love.graphics.getWidth() / 2
+        if camera_pos.x < min_cam_bound_x then
+            camera_pos.x = min_cam_bound_x
+        end
+        if camera_pos.x > max_cam_bound_x then
+            camera_pos.x = max_cam_bound_x
+        end
+    end
+    if height then
+        local cam_bound_y = height - 100 - love.graphics.getHeight() / 2
+        if camera_pos.y > cam_bound_y then
+            camera_pos.y = cam_bound_y
+        end
+    end
+    return camera_pos
 end
