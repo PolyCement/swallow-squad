@@ -12,9 +12,12 @@ Level = Object:extend()
 
 -- initialise the level
 function Level:new(filename, player_x, player_y, width, height)
+    -- initialize prey
+    prey = {}
+
     -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
-    loadGeometry(filename)
+    loadColliders(filename)
 
     -- define player & camera, start em both at the same coordinates
     player = Player(player_x, player_y)
@@ -26,6 +29,9 @@ function Level:new(filename, player_x, player_y, width, height)
 
     -- the clock
     clock = Clock()
+
+    -- gui blade
+    blade = love.graphics.newImage("assets/gui_blade.png")
 
     -- set gravity
     gravity = 9.81 * 3 * 16
@@ -98,8 +104,8 @@ function string.split(str, delimiter)
     return fields
 end
 
--- loads map geometry into the collision handler
-function loadGeometry(filename)
+-- loads colliders defined by the given file into the collision handler
+function loadColliders(filename)
     -- open the file
     f = io.open(filename, "r")
     for line in f:lines() do
@@ -107,16 +113,26 @@ function loadGeometry(filename)
         if not string.starts(line, "#") then
             -- read the fields to a table
             local fields = string.split(line)
-            for idx = 2, #fields do
-                fields[idx] = tonumber(fields[idx])
-            end
             -- the first field determines the collider type
             if fields[1] == "c" then
                 -- standard collider
+                for idx = 2, #fields do
+                    fields[idx] = tonumber(fields[idx])
+                end
                 collisionHandler:add(Collider(true, unpack(fields, 2)))
             elseif fields[1] == "p" then
+                -- standard collider
+                for idx = 2, #fields do
+                    fields[idx] = tonumber(fields[idx])
+                end
                 -- one-way platform
                 collisionHandler:add(Platform(unpack(fields, 2)))
+            elseif fields[1] == "s" then
+                -- prey (s for survivor, since p is in use)
+                prey[Prey(fields[2], tonumber(fields[3]), tonumber(fields[4]))] = true
+            elseif fields[1] == "t" then
+                -- taur
+                prey[Prey(fields[2], tonumber(fields[3]), tonumber(fields[4]))] = true
             end
         end
     end
@@ -145,4 +161,61 @@ function bindCamera(width, height)
         end
     end
     return camera_pos
+end
+
+function Level:draw()
+    camera:attach()
+    -- draw world colliders
+    if showColliders then
+        collisionHandler:draw()
+    end
+    -- draw all prey
+    for p, _  in pairs(prey) do
+        p:draw()
+    end
+    player:draw()
+    camera:detach()
+    -- draw the timer
+    if self:gameEnded() then
+        drawEndMessage()
+    else
+        drawGUI()
+    end
+end
+
+local gui_font = love.graphics.newFont(28)
+local font = love.graphics.newFont(32)
+-- prints the message when the game ends
+function drawEndMessage()
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(font)
+    local message = "Congratulations!\nYou saved everyone!\n\nTime: " .. clock:getFormattedTime()
+    -- centre the message
+    local text_width = font:getWidth(message)
+    local x = (love.graphics.getWidth() - text_width) / 2
+    local y = (love.graphics.getHeight() - font:getHeight(message)*4) / 2
+    love.graphics.printf(message, x, y, text_width, "center")
+    love.graphics.setColor(255, 255, 255, 255)
+end
+
+function drawGUI()
+    -- draw gui blades
+    drawBlades()
+    local y = love.graphics.getHeight() - 40
+    -- draw the clock
+    clock:draw(12, y)
+    -- draw the number of remaining prey
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(gui_font)
+    local message = "Survivors: " .. table.length(prey)
+    love.graphics.print(message, 603, y)
+    love.graphics.setColor(255, 255, 255, 255)
+end
+
+function drawBlades()
+    local y = love.graphics.getHeight() - blade:getHeight()
+    -- left blade
+    love.graphics.draw(blade, 0, y)
+    -- right blade
+    love.graphics.draw(blade, love.graphics.getWidth(), y, 0, -1, 1)
 end

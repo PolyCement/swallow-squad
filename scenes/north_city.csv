@@ -57,3 +57,15 @@ p,2728,154,3223,252
 # todo: make these ones move
 p,1870,1241,2038,1241
 p,3357,830,3526,830
+# prey
+s,assets/prey_wolf.png,4628,2303
+s,assets/prey_wolf.png,100,1138
+s,assets/prey_wolf.png,1680,689
+s,assets/prey_wolf.png,4901,841
+s,assets/prey_wolf.png,3372,1547
+s,assets/prey_wolf.png,200,1825
+s,assets/prey_wolf.png,2002,1209
+s,assets/prey_wolf.png,2964,999
+s,assets/prey_wolf.png,250,2545
+# here comes a special boy!
+t,assets/taur_fox.png,2678,213

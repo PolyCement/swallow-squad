@@ -15,26 +15,10 @@ function test_zone:enter()
 
     -- background
     bg = Sprite("assets/bg_cloud.png", 0, 0)
-
-    -- survivors
-    prey = {}
-    for idx = 1, 12 do
-        prey[Prey("assets/prey_wolf.png", 144 + 16 * idx, 256)] = true
-    end
 end
 
 function test_zone:draw()
-    -- draw the bg before attaching the camera to give a skybox effect
-    bg:draw()
-    camera:attach()
-    -- draw world colliders
-    if showColliders then
-        collisionHandler:draw()
-    end
-    -- draw all prey
-    for p, _  in pairs(prey) do
-        p:draw()
-    end
-    player:draw()
-    camera:detach()
+    -- draw clouds, then everything else
+    clouds:draw()
+    test_zone.super.draw(self)
 end
