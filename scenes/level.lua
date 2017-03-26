@@ -3,7 +3,7 @@ Camera = require "lib.hump.camera"
 require "engine.collision_handler"
 require "colliders.collider"
 require "colliders.platform"
-require "engine.clock"
+require "engine.hud"
 require "actors.player"
 
 -- stuff common to all levels will end up here once i figure out what that actually is
@@ -23,15 +23,12 @@ function Level:new(filename, player_x, player_y, width, height)
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
+    -- hud
+    self.hud = Hud()
+
     -- level width and height (for restricting camera)
     self.width = width
     self.height = height
-
-    -- the clock
-    clock = Clock()
-
-    -- gui blade
-    blade = love.graphics.newImage("assets/gui_blade.png")
 
     -- set gravity
     gravity = 9.81 * 3 * 16
@@ -44,12 +41,32 @@ end
 function Level:update(dt)
     -- update stuff if the game hasn't ended
     if not self:gameEnded() then
-        clock:update(dt)
+        self.hud:update(dt)
         player:update(dt)
         camera:lookAt(bindCamera(self.width, self.height):unpack())
         for p, _  in pairs(prey) do
             p:update()
         end
+    end
+end
+
+function Level:draw()
+    camera:attach()
+    -- draw world colliders
+    if showColliders then
+        collisionHandler:draw()
+    end
+    -- draw all prey
+    for p, _  in pairs(prey) do
+        p:draw()
+    end
+    player:draw()
+    camera:detach()
+    -- draw the timer
+    if self:gameEnded() then
+        self.hud:drawEndMessage()
+    else
+        self.hud:draw()
     end
 end
 
@@ -161,61 +178,4 @@ function bindCamera(width, height)
         end
     end
     return camera_pos
-end
-
-function Level:draw()
-    camera:attach()
-    -- draw world colliders
-    if showColliders then
-        collisionHandler:draw()
-    end
-    -- draw all prey
-    for p, _  in pairs(prey) do
-        p:draw()
-    end
-    player:draw()
-    camera:detach()
-    -- draw the timer
-    if self:gameEnded() then
-        drawEndMessage()
-    else
-        drawGUI()
-    end
-end
-
-local gui_font = love.graphics.newFont(28)
-local font = love.graphics.newFont(32)
--- prints the message when the game ends
-function drawEndMessage()
-    love.graphics.setColor(0, 0, 0, 255)
-    love.graphics.setFont(font)
-    local message = "Congratulations!\nYou saved everyone!\n\nTime: " .. clock:getFormattedTime()
-    -- centre the message
-    local text_width = font:getWidth(message)
-    local x = (love.graphics.getWidth() - text_width) / 2
-    local y = (love.graphics.getHeight() - font:getHeight(message)*4) / 2
-    love.graphics.printf(message, x, y, text_width, "center")
-    love.graphics.setColor(255, 255, 255, 255)
-end
-
-function drawGUI()
-    -- draw gui blades
-    drawBlades()
-    local y = love.graphics.getHeight() - 40
-    -- draw the clock
-    clock:draw(12, y)
-    -- draw the number of remaining prey
-    love.graphics.setColor(0, 0, 0, 255)
-    love.graphics.setFont(gui_font)
-    local message = "Survivors: " .. table.length(prey)
-    love.graphics.print(message, 603, y)
-    love.graphics.setColor(255, 255, 255, 255)
-end
-
-function drawBlades()
-    local y = love.graphics.getHeight() - blade:getHeight()
-    -- left blade
-    love.graphics.draw(blade, 0, y)
-    -- right blade
-    love.graphics.draw(blade, love.graphics.getWidth(), y, 0, -1, 1)
 end
