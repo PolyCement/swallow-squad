@@ -7,8 +7,8 @@ function Sprite:new(image, x, y, offset_x, offset_y, flip_offset)
     self.image = love.graphics.newImage(image)
     -- set the image to tile if drawn on a quad bigger than it actually is
     self.image:setWrap("repeat", "repeat")
-    self.x = x
-    self.y = y
+    self.x = x or 0
+    self.y = y or 0
     -- gotta use a quad for wrapping
     local width = self.image:getWidth()
     local height = self.image:getHeight()
