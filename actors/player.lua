@@ -39,7 +39,7 @@ function Player:new(x, y)
     local y2 = y + 128
     Player.super.new(self, true, x, y, x2, y, x2, y2, x, y2)
     -- sprite
-    self.sprite = AnimatedSprite(130, 152, "assets/swallow.png",
+    self.sprite = AnimatedSprite(130, 152, "assets/images/swallow.png",
                                  self.vertices[1].x, self.vertices[1].y, 65, 23, width)
     -- register animations
     for i=1, 5 do

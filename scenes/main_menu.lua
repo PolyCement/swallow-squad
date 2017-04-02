@@ -12,9 +12,9 @@ local subtitle_y = love.graphics.getHeight() - (title_y + subtitle_font:getHeigh
 
 function main_menu:enter()
     love.graphics.setBackgroundColor(230, 230, 230)
-    clouds = Sprite("assets/bg_cloud.png")
+    clouds = Sprite("assets/images/bg_cloud.png")
     -- define the title sprite then use its width to set its x pos
-    title = Sprite("assets/title.png")
+    title = Sprite("assets/images/title.png")
     local title_x = center_x - (title:getWidth() / 2)
     title:setPos(title_x, title_y)
 end

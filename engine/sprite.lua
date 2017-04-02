@@ -5,6 +5,8 @@ Sprite = Object:extend()
 
 function Sprite:new(image, x, y, offset_x, offset_y, flip_offset)
     self.image = love.graphics.newImage(image)
+    -- disable aliasing
+    self.image:setFilter("nearest", "nearest", 0)
     -- set the image to tile if drawn on a quad bigger than it actually is
     self.image:setWrap("repeat", "repeat")
     self.x = x or 0

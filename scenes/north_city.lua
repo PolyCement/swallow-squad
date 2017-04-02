@@ -14,10 +14,10 @@ function north_city:enter()
     love.graphics.setBackgroundColor(230, 230, 230)
 
     -- clouds
-    clouds = Sprite("assets/bg_cloud.png", 0, 0)
+    clouds = Sprite("assets/images/bg_cloud.png", 0, 0)
 
     -- background
-    bg = Sprite("assets/north_city.png", 0, 0)
+    bg = Sprite("assets/images/north_city.png", 0, 0)
 end
 
 function north_city:draw()

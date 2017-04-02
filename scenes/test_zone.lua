@@ -14,7 +14,7 @@ function test_zone:enter()
     showColliders = true
 
     -- background
-    bg = Sprite("assets/bg_cloud.png", 0, 0)
+    bg = Sprite("assets/images/bg_cloud.png", 0, 0)
 end
 
 function test_zone:draw()

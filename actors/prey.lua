@@ -36,7 +36,8 @@ local messages = {
 -- tasty!
 Prey = Collider:extend()
 
-local font = love.graphics.newFont(12)
+local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 7)
+font:setFilter("nearest", "nearest", 0)
 
 function Prey:new(image, x, y)
     -- define the sprite first, then use its dimensions to determine our vertices
@@ -46,7 +47,7 @@ function Prey:new(image, x, y)
     Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
     -- how heavy are we
     self.weight = 1
-    -- are we yelling?
+    -- what are we yelling?
     self.message = nil
     -- are we looking left?
     self.facingLeft = true
@@ -81,12 +82,25 @@ end
 
 function Prey:draw()
     if self.message then
-        local shout_pos = self.vertices[2] + vector(0, -16)
-        love.graphics.rectangle("fill", shout_pos.x, shout_pos.y,
-                                font:getWidth(self.message), font:getHeight(self.message))
+        -- maybe these should be calculated earlier and stored
+        -- text position
+        local text_x, text_y = self.vertices[2].x, self.vertices[2].y - 16
+        -- white rectangle position and dimensions
+        local white_x, white_y = text_x - 2, text_y - 2
+        local white_w, white_h = font:getWidth(self.message) + 3, font:getHeight(self.message) + 3
+        -- black rectangle (outline) position and dimensions
+        local black_x, black_y = white_x - 1, white_y - 1
+        local black_w, black_h = white_w + 2, white_h + 2
+        -- draw black rectangle (outline)
+        love.graphics.setColor(0, 0, 0, 255)
+        love.graphics.rectangle("fill", black_x, black_y, black_w, black_h)
+        -- draw white rectangle
+        love.graphics.setColor(255, 255, 255, 255)
+        love.graphics.rectangle("fill", white_x, white_y, white_w, white_h)
+        -- draw text
         love.graphics.setColor(0, 0, 0, 255)
         love.graphics.setFont(font)
-        love.graphics.print(self.message, shout_pos.x, shout_pos.y)
+        love.graphics.print(self.message, text_x, text_y)
         love.graphics.setColor(255, 255, 255, 255)
     end
     self.sprite:draw()

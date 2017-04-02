@@ -26,7 +26,7 @@ function Hud:new()
     self.preyCount = table.length(prey)
 
     -- gui blade sprite and y position
-    self.blade = love.graphics.newImage("assets/gui_blade.png")
+    self.blade = love.graphics.newImage("assets/images/gui_blade.png")
     self.bladeY = love.graphics.getHeight() - self.blade:getHeight()
 
     -- text positions
