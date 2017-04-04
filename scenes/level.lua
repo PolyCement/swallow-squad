@@ -56,11 +56,12 @@ function Level:draw()
     if showColliders then
         collisionHandler:draw()
     end
+    -- draw the player before prey so speech bubbles show on top
+    player:draw()
     -- draw all prey
     for p, _  in pairs(prey) do
         p:draw()
     end
-    player:draw()
     camera:detach()
     -- draw the timer
     if self:gameEnded() then

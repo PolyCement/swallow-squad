@@ -42,6 +42,14 @@ function Sprite:setPos(x, y)
     self.y = y
 end
 
+function Sprite:getXPos(x, y)
+    return self.x
+end
+
+function Sprite:getYPos(x, y)
+    return self.y
+end
+
 function Sprite:move(dx, dy)
     self.x = self.x + dx
     self.y = self.y + dy

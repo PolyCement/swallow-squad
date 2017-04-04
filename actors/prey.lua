@@ -1,3 +1,4 @@
+Object = require "lib.classic"
 require "colliders.collider"
 require "engine.sprite"
 
@@ -33,11 +34,56 @@ local messages = {
     "Swallow me already!"
 }
 
--- tasty!
-Prey = Collider:extend()
+-- speech bubble used by prey
+SpeechBubble = Object:extend()
 
 local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 7)
 font:setFilter("nearest", "nearest", 0)
+
+-- x and y denote lower left position of speech bubble (ie. source of the bubble's tail)
+function SpeechBubble:new(x, y)
+    -- sprite for speech bubble tail
+    self.tailSprite = Sprite("assets/images/shout_tail.png")
+    self.tailSprite:setPos(x, y - self.tailSprite:getHeight())
+    -- x positions don't change
+    self.black_x = x
+    self.white_x = self.black_x + 1
+    self.text_x = self.white_x + 2
+    -- set a default message to initialise dimensions and y positions
+    self:setMessage(":o3")
+end
+
+-- set message and update speech bubble size to fit
+function SpeechBubble:setMessage(message)
+    self.message = message
+    -- set width, height and y position of speech bubble based on message
+    local message_w = font:getWidth(self.message)
+    local message_h = font:getHeight(self.message)
+    self.white_w, self.white_h = message_w + 3, message_h + 3
+    self.black_w, self.black_h = self.white_w + 2, self.white_h + 2
+    self.text_y = self.tailSprite:getYPos() - (message_h + 1)
+    self.white_y = self.text_y - 2
+    self.black_y = self.white_y - 1
+end
+
+function SpeechBubble:draw()
+    -- draw black rectangle (outline)
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.rectangle("fill", self.black_x, self.black_y, self.black_w, self.black_h)
+    -- draw white rectangle
+    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.rectangle("fill", self.white_x, self.white_y, self.white_w, self.white_h)
+    -- draw "tail"
+    self.tailSprite:draw()
+    -- draw text
+    love.graphics.setColor(0, 0, 0, 255)
+    love.graphics.setFont(font)
+    love.graphics.print(self.message, self.text_x, self.text_y)
+    love.graphics.setColor(255, 255, 255, 255)
+end
+
+-- tasty!
+Prey = Collider:extend()
 
 function Prey:new(image, x, y)
     -- define the sprite first, then use its dimensions to determine our vertices
@@ -45,10 +91,11 @@ function Prey:new(image, x, y)
     local x2 = x + self.sprite:getWidth() - 2
     local y2 = y + self.sprite:getHeight() - 2
     Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
+    -- stuff for shouting at the player
+    self.speechBubble = SpeechBubble(x2, y)
+    self.shouting = false
     -- how heavy are we
     self.weight = 1
-    -- what are we yelling?
-    self.message = nil
     -- are we looking left?
     self.facingLeft = true
     -- register with collision handler
@@ -72,36 +119,18 @@ function Prey:update()
     end
     -- yell when the player gets close
     if pos:dist(player_pos) < 256 then
-        if not self.message then
-            self.message = messages[math.random(#messages)]
+        if not self.shouting then
+            self.shouting = true
+            self.speechBubble:setMessage(messages[math.random(#messages)])
         end
     else
-        self.message = nil
+        self.shouting = false
     end
 end
 
 function Prey:draw()
-    if self.message then
-        -- maybe these should be calculated earlier and stored
-        -- text position
-        local text_x, text_y = self.vertices[2].x, self.vertices[2].y - 16
-        -- white rectangle position and dimensions
-        local white_x, white_y = text_x - 2, text_y - 2
-        local white_w, white_h = font:getWidth(self.message) + 3, font:getHeight(self.message) + 3
-        -- black rectangle (outline) position and dimensions
-        local black_x, black_y = white_x - 1, white_y - 1
-        local black_w, black_h = white_w + 2, white_h + 2
-        -- draw black rectangle (outline)
-        love.graphics.setColor(0, 0, 0, 255)
-        love.graphics.rectangle("fill", black_x, black_y, black_w, black_h)
-        -- draw white rectangle
-        love.graphics.setColor(255, 255, 255, 255)
-        love.graphics.rectangle("fill", white_x, white_y, white_w, white_h)
-        -- draw text
-        love.graphics.setColor(0, 0, 0, 255)
-        love.graphics.setFont(font)
-        love.graphics.print(self.message, text_x, text_y)
-        love.graphics.setColor(255, 255, 255, 255)
+    if self.shouting then
+        self.speechBubble:draw()
     end
     self.sprite:draw()
 end
