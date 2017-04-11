@@ -40,10 +40,3 @@ function love.load()
     -- start at main menu
     Gamestate.switch(main_menu)
 end
-
-function love.keypressed(key)
-    -- esc to quit
-    if key == "escape" then
-        love.event.quit()
-    end
-end

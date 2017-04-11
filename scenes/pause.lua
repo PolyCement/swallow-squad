@@ -1,0 +1,65 @@
+Object = require "lib.classic"
+suit = require "lib.suit"
+-- tweak suit theme
+suit.theme.cornerRadius = 0
+suit.theme.color.normal.bg = {21, 100, 145}
+suit.theme.color.normal.fg = {0, 0, 0}
+
+-- it's a pause menu
+Pause = Object:extend()
+
+function Pause:enter(previous)
+    -- keep track of the previous scene so we can keep drawing it in the background
+    self.previous = previous
+    self.padding = 10
+    self.buttonW = 300
+    self.buttonH = 50
+    self.width = self.buttonW + self.padding * 2
+    self.height = (self.buttonH + self.padding) * 5
+    self.x = (love.graphics.getWidth() - self.width) / 2
+    self.y = (love.graphics.getHeight() - self.height) / 2
+    self.action = nil
+end
+
+function Pause:update(dt)
+    -- suit updates before pause so we gotta give suit a chance to register buttons being released
+    -- so we respond to events one cycle after checking em
+    if self.action == "resume" then
+        Gamestate.pop()
+    elseif self.action == "restart" then
+        Gamestate.switch(self.previous)
+    elseif self.action == "return" then
+        Gamestate.switch(main_menu)
+    elseif self.action == "quit" then
+        love.event.quit()
+    end
+
+    -- define menu
+    suit.layout:reset(self.x + self.padding, self.y, 0, self.padding)
+    suit.Label("Paused!", suit.layout:row(self.buttonW, self.buttonH))
+    if suit.Button("Resume", suit.layout:row(self.buttonW, self.buttonH)).hit then
+        self.action = "resume"
+    elseif suit.Button("Restart", suit.layout:row(self.buttonW, self.buttonH)).hit then
+        self.action = "restart"
+    elseif suit.Button("Quit to Main Menu", suit.layout:row(self.buttonW, self.buttonH)).hit then
+        self.action = "return"
+    elseif suit.Button("Quit to Desktop", suit.layout:row(self.buttonW, self.buttonH)).hit then
+        self.action = "quit"
+    end
+end
+
+function Pause:draw()
+    -- draw background scene
+    self.previous:draw()
+    -- draw pause window
+    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+    -- draw gui
+    suit.draw()
+end
+
+function Pause:keypressed(key)
+    -- escape to unpause
+    if key == "escape" then
+        Gamestate.pop()
+    end
+end

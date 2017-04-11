@@ -4,9 +4,9 @@ My entry for [Strawberry Jam](https://itch.io/jam/strawberry-jam). It's a game a
 Makes use of the font "Star Perv", from [Anna Anthrophy's World of Fonts](https://w.itch.io/world-of-fonts).
 
 # Running the Game
-Swallow Squad requires the löve framework, which can be downloaded [here](https://love2d.org/). Download the game, descend into the root directory, and run with the following:
+Swallow Squad requires the LÖVE framework, which can be downloaded [here](https://love2d.org/). Download the game, descend into the root directory, and run with the following:
 ```bash
 love .
 ```
 
-Instructions on building the game to run as a standalone executable (useful if you don't want to install löve) can be found [here](https://love2d.org/wiki/Game_Distribution).
+Instructions on building the game to run as a standalone executable (useful if you don't want to install LÖVE) can be found [here](https://love2d.org/wiki/Game_Distribution).

@@ -5,6 +5,7 @@ require "colliders.collider"
 require "colliders.platform"
 require "engine.hud"
 require "actors.player"
+require "scenes.pause"
 
 -- stuff common to all levels will end up here once i figure out what that actually is
 -- levels should extend this
@@ -84,6 +85,10 @@ function Level:keypressed(key)
         elseif key == "m" then
             showMousePos = not showMousePos
         end
+    end
+    -- pause menu
+    if key == "escape" then
+        Gamestate.push(Pause)
     end
     -- if the game has ended ignore everything but enter
     if self:gameEnded() then
