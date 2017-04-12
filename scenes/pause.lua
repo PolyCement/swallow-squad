@@ -1,9 +1,14 @@
+require "engine.sprite"
 Object = require "lib.classic"
 suit = require "lib.suit"
--- tweak suit theme
+
+-- adjust suit theme
 suit.theme.cornerRadius = 0
-suit.theme.color.normal.bg = {21, 100, 145}
-suit.theme.color.normal.fg = {0, 0, 0}
+suit.theme.color = {
+    normal  = {bg = {225,196, 35}, fg = {  0,  0,  0}},
+    hovered = {bg = {225,165, 35}, fg = {  0,  0,  0}},
+    active  = {bg = {255,238,140}, fg = {  0,  0,  0}}
+}
 
 -- it's a pause menu
 Pause = Object:extend()
@@ -11,6 +16,7 @@ Pause = Object:extend()
 function Pause:enter(previous)
     -- keep track of the previous scene so we can keep drawing it in the background
     self.previous = previous
+    -- dimensions...
     self.padding = 10
     self.buttonW = 300
     self.buttonH = 50
@@ -18,6 +24,20 @@ function Pause:enter(previous)
     self.height = (self.buttonH + self.padding) * 5
     self.x = (love.graphics.getWidth() - self.width) / 2
     self.y = (love.graphics.getHeight() - self.height) / 2
+    -- load up the blades
+    local blade_overhang = 40
+    local blade_left_x = self.x - blade_overhang
+    self.bladeLeft = Sprite("assets/images/gui_blade.png", blade_left_x, self.y)
+    self.bladeLeft:flip()
+    self.bladeLeft:flip("vertical")
+    self.bladeRight = Sprite("assets/images/gui_blade.png")
+    local blade_right_x = self.x + self.width + blade_overhang - self.bladeRight:getWidth()
+    self.bladeRight:setPos(blade_right_x, self.y)
+    self.bladeRight:flip("vertical")
+    self.bladeCenter = Sprite("assets/images/gui_center.png")
+    local blade_center_x = self.x + (self.width - self.bladeCenter:getWidth()) / 2
+    self.bladeCenter:setPos(blade_center_x, self.y - 2)
+    -- what action should be performed
     self.action = nil
 end
 
@@ -36,7 +56,7 @@ function Pause:update(dt)
 
     -- define menu
     suit.layout:reset(self.x + self.padding, self.y, 0, self.padding)
-    suit.Label("Paused!", suit.layout:row(self.buttonW, self.buttonH))
+    suit.Label("PAUSED", suit.layout:row(self.buttonW, self.buttonH))
     if suit.Button("Resume", suit.layout:row(self.buttonW, self.buttonH)).hit then
         self.action = "resume"
     elseif suit.Button("Restart", suit.layout:row(self.buttonW, self.buttonH)).hit then
@@ -51,8 +71,14 @@ end
 function Pause:draw()
     -- draw background scene
     self.previous:draw()
-    -- draw pause window
+    -- draw window background
+    love.graphics.setColor(0, 0, 0, 255)
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+    love.graphics.setColor(255, 255, 255, 255)
+    -- draw blades
+    self.bladeLeft:draw()
+    self.bladeRight:draw()
+    self.bladeCenter:draw()
     -- draw gui
     suit.draw()
 end
