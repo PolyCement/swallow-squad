@@ -100,10 +100,6 @@ function Level:keypressed(key)
     end
 end
 
-function Level:keyreleased(key)
-    player:keyReleased(key)
-end
-
 -- debug: prints the coordinate under the cursor (for placing world geometry)
 function Level:mousemoved(x, y)
     if showMousePos then
