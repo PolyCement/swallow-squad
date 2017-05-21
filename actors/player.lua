@@ -1,5 +1,6 @@
 require "colliders.collider"
 require "engine.animated_sprite"
+require "lib.classic"
 
 -- rrerr
 Player = Collider:extend()
@@ -27,10 +28,34 @@ local MAX_JUMP_SPEED = 12 * METER
 local MIN_JUMP_SPEED = MAX_JUMP_SPEED * .75
 local JUMP_SPEED_PENALTY = (MAX_JUMP_SPEED - MIN_JUMP_SPEED) / MAX_CAPACITY
 local MAX_TIME_JUMPING = .5
-local MAX_JUMPS = 2
+local MAX_JUMPS = 3
 
 -- if the player's speed drops below this it's set to 0
 local JIGGLE_PREVENTION = 5
+
+-- template for state modelling
+PlayerState = Object:extend()
+
+function PlayerState:new(player)
+    -- track the player object so we can swap its state
+    self.player = player
+end
+
+function PlayerState:enter()
+end
+
+function PlayerState:update(dt)
+end
+
+-- states
+StandingState = PlayerState:extend()
+
+function StandingState:update(dt)
+    if love.keyboard.isDown("left") or love.keyboard.isDown("right") then
+        self.player:setState("run")
+    end
+end
+    
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
@@ -59,10 +84,8 @@ function Player:new(x, y)
     self.jumpSpeed = MAX_JUMP_SPEED
     self.timeJumping = 0
     self.jumpsLeft = MAX_JUMPS
-    -- have we hit the ground this cycle?
-    self.landed = false
-    -- are we running?
-    self.running = false
+    -- the player's current state
+    self.state = "stand"
     -- where was our bottom edge before we moved? (used for one-way platforms)
     self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
     -- what's our current animation
@@ -70,34 +93,46 @@ function Player:new(x, y)
 end
 
 function Player:update(dt)
-    -- todo: better animation control
+    print("=====")
     -- mess with the player's velocity
-    if self.landed then
+    if self.state == "stand" then
+        if love.keyboard.isDown("left") then
+            self:setState("run")
+            self:accelerate(-self.acceleration*dt)
+            if not self.sprite:isMirrored() then
+                self.sprite:flip()
+            end
+        elseif love.keyboard.isDown("right") then
+            self:setState("run")
+            self:accelerate(self.acceleration*dt)
+            if self.sprite:isMirrored() then
+                self.sprite:flip()
+            end
+        end
+        -- decelerate
+        if self.velocity.x > JIGGLE_PREVENTION then
+            self:accelerate(-self.acceleration*dt)
+        elseif self.velocity.x < -JIGGLE_PREVENTION then
+            self:accelerate(self.acceleration*dt)
+        else
+            -- no jigglin
+            self.velocity.x = 0
+        end
+    elseif self.state == "run" then
         -- if we're touching the ground, run
         if love.keyboard.isDown("left") then
-            if not self.running then
-                self.running = true
-                self:setAnimation("run")
-            end
             self:accelerate(-self.acceleration*dt)
             if not self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         elseif love.keyboard.isDown("right") then
             self:accelerate(self.acceleration*dt)
-            if not self.running then
-                self.running = true
-                self:setAnimation("run")
-            end
             if self.sprite:isMirrored() then
                 self.sprite:flip()
             end
         else
-            self.running = false
-            if self.currentAnimation ~= "stand" then
-                self:setAnimation("stand")
-            end
-            -- we have contact with the floor so decelerate
+            self:setState("stand")
+            -- decelerate
             if self.velocity.x > JIGGLE_PREVENTION then
                 self:accelerate(-self.acceleration*dt)
             elseif self.velocity.x < -JIGGLE_PREVENTION then
@@ -107,8 +142,20 @@ function Player:update(dt)
                 self.velocity.x = 0
             end
         end
-    else
-        self.running = false
+    elseif self.state == "jump" then
+        -- while airbourne, allow the player to influence their speed a little
+        if love.keyboard.isDown("left") then
+            self:accelerate(-self.acceleration*.5*dt)
+        elseif love.keyboard.isDown("right") then
+            self:accelerate(self.acceleration*.5*dt)
+        end
+        -- bounce bounce
+        if love.keyboard.isDown("space") and self.jumpsLeft >= 0
+            and self.timeJumping < MAX_TIME_JUMPING then
+            self.timeJumping = self.timeJumping + dt
+            self.velocity.y = -self.jumpSpeed
+        end
+    elseif self.state == "fall" then
         -- while airbourne, allow the player to influence their speed a little
         if love.keyboard.isDown("left") then
             self:accelerate(-self.acceleration*.5*dt)
@@ -117,17 +164,7 @@ function Player:update(dt)
         end
     end
 
-    -- bounce bounce
-    if love.keyboard.isDown("space") and self.jumpsLeft >= 0
-        and self.timeJumping < MAX_TIME_JUMPING then
-        self.timeJumping = self.timeJumping + dt
-        self.velocity.y = -self.jumpSpeed
-    else
-        if self.velocity.y > 0 and self.currentAnimation ~= "fall" then
-            self:setAnimation("fall")
-        end
-    end
-
+    print(self.state)
     -- update pos
     self.velocity.y = self.velocity.y + gravity * dt
     local delta = self.velocity * dt
@@ -136,9 +173,18 @@ function Player:update(dt)
     self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
     self:move(delta)
 
+    print(self.state)
+    -- if our y velocity hasn't been reset by hitting a surface, we're falling
+    if self.state ~= "fall" then
+        if self.velocity.y > 0 then
+            self:setState("fall")
+        end
+    end
+    print(self.state)
+
     -- update sprite (we manipulate it into updating faster or slower by tampering with dt)
     local animation_coefficient = 1
-    if self.running then
+    if self.state == "run" then
          animation_coefficient = math.abs(self.velocity.x) / MAX_SPEED
     end
     self.sprite:update(dt * animation_coefficient)
@@ -160,12 +206,11 @@ function Player:keyPressed(key)
     -- jumping from the ground is free, only air jumps should decrement the counter
     if key == "space" then
         if self.jumpsLeft > 0 then
-            self:setAnimation("jump")
+            self:setState("jump")
         end
-        if not self.landed then
+        if self.state == "jump" or self.state == "fall" then
             self.jumpsLeft = self.jumpsLeft - 1
         end
-        self.landed = false
     end
 end
 
@@ -183,9 +228,11 @@ function Player:onCollision(obj, colliding_side, mtd)
     if obj:isSolid() then
         if colliding_side == side.bottom then
             self.velocity.y = 0
-            self.landed = true
-            -- reset jump count
-            self.jumpsLeft = MAX_JUMPS
+            if self.state == "jump" or self.state == "fall" then
+                self:setState("run")
+                -- reset jump count
+                self.jumpsLeft = MAX_JUMPS
+            end
         -- if we hit the side of something kill x velocity
         elseif colliding_side == side.top then
             self.velocity.y = 0
@@ -223,13 +270,20 @@ function Player:isFull()
     return self.fullness > MAX_CAPACITY
 end
 
+function Player:setState(new_state)
+    self.state = new_state
+    self:setAnimation(new_state)
+end
+
 function Player:move(delta)
-    local was_landed = self.landed
-    self.landed = false 
+    local old_state = self.state
+    local was_landed = old_state == "stand" or old_state == "run"
     -- move as normal
     Player.super.move(self, delta)
     -- if the player becomes airborne and is moving downwards, check what's under em
-    if was_landed and not self.landed and self.velocity.y > 0 then
+    print(was_landed)
+    if was_landed and not (self.state == "stand" or self.state == "run") and self.velocity.y > 0 then
+        print("shid")
         -- cast a tiny ray from our back edge
         local back_corner = nil
         if self.velocity.x < 0 then
@@ -248,7 +302,7 @@ function Player:move(delta)
             if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
                 local delta = vector(0, intersect.y - back_corner.y)
                 self:movementHelper(delta)
-                self.landed = true
+                self.state = old_state
                 self.velocity.y = 0
             end
         end

@@ -62,7 +62,7 @@ local font_big = love.graphics.newFont(32)
 function Hud:drawEndMessage()
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(font_big)
-    local message = "Congratulations!\nYou saved everyone!\n\nTime: " .. clock:getFormattedTime()
+    local message = "Congratulations!\nYou saved everyone!\n\nTime: " .. self.clock:getFormattedTime()
     -- centre the message
     local text_width = font:getWidth(message)
     local x = (love.graphics.getWidth() - text_width) / 2
