@@ -9,7 +9,8 @@ Player = Collider:extend()
 -- use this to specify things in meters rather than pixels
 local METER = 16
 
--- constants for player behaviour
+-- keeping these constants out here for now so i can mess with em more easily
+-- i don't feel like they were any better off as instance variables anyway?
 local MAX_CAPACITY = 12
 
 -- speed constants
@@ -98,10 +99,7 @@ function StandingState:update(dt)
         self.player.velocity.x = 0
     end
     StandingState.super.update(self, dt)
-    -- if we're falling (ie. we've left the ground) attempt to snap to it
-    if self.player.velocity.y > 0 then
-        self.player:snapToGround()
-    end
+    -- snap player to ground here
     self.player.sprite:update(dt)
 end
 
@@ -139,9 +137,7 @@ function RunningState:update(dt)
         return
     end
     RunningState.super.update(self, dt)
-    if self.player.velocity.y > 0 then
-        self.player:snapToGround()
-    end
+    -- snap player to ground here
     self.player.sprite:update(dt * math.abs(self.player.velocity.x) / MAX_SPEED)
 end
 
@@ -163,10 +159,9 @@ end
 function JumpingState:enter()
     self.player.jumpsLeft = self.player.jumpsLeft - 1
     self.timeJumping = 0
-    self.jumpEnded = false
-    -- initialise y velocity so air jumps don't immediately switch to falling
-    self.player.velocity.y = -self.jumpSpeed
     self.player:setAnimation("jump")
+    self.jumpEnded = false
+    self.player.velocity.y = -self.jumpSpeed
 end
 
 function JumpingState:update(dt)
@@ -342,30 +337,30 @@ end
 
 -- used to keep the player stuck to slopes
 function Player:snapToGround()
-    -- cast a tiny ray from our back edge
-    local back_corner = nil
-    if self.velocity.x < 0 then
-        back_corner = self.vertices[3]
-    else
-        back_corner = self.vertices[4]
-    end
-    -- 8 is a long beam but needed to handle ~45 degree slopes while empty
-    local ray_end = back_corner + vector(0, 8)
-    local collisions = collisionHandler:raycast(back_corner, ray_end)
-    -- if there's a platform close to the player's feet, pull em down
-    if #collisions > 0 then
-        local segment, intersect = collisions[1][1], collisions[1][2]
-        -- don't do anything if we're not actually going down the slope
-        -- (this fixes issues with the ray catching a slight slope while ascending)
-        if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
-            local delta = vector(0, intersect.y - back_corner.y)
-            self:move(delta)
-            -- rounding means we might not quite touch the slope
-            -- so we gotta reset y velocity to stop us immediately entering the fall state
-            self.velocity.y = 0
-        end
-    end
-end
+        -- -- cast a tiny ray from our back edge
+        -- local back_corner = nil
+        -- if self.velocity.x < 0 then
+            -- back_corner = self.vertices[3]
+        -- else
+            -- back_corner = self.vertices[4]
+        -- end
+        -- -- 5 is a pretty long beam but required to handle slopes up to ~45 degrees while empty
+        -- local ray_end = back_corner + vector(0, 8)
+        -- local collisions = collisionHandler:raycast(back_corner, ray_end)
+        -- -- if there's a platform close to the player's feet, pull em down
+        -- if #collisions > 0 then
+            -- local segment, intersect = collisions[1][1], collisions[1][2]
+            -- -- don't do anything if we're not actually going down the slope
+            -- -- (this fixes issues with the ray catching a slight slope while ascending)
+            -- if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
+                -- local delta = vector(0, intersect.y - back_corner.y)
+                -- self:movementHelper(delta)
+                -- self.state = old_state
+                -- self.velocity.y = 0
+            -- end
+        -- end
+    -- end
+--end
 
 function Player:__tostring()
     return "Player"
