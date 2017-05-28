@@ -1,4 +1,4 @@
-Object = require "lib.classic"
+local Object = require "lib.classic"
 
 -- a simple clock
 Clock = Object:extend()

@@ -1,17 +1,17 @@
-Object = require "lib.classic"
-Camera = require "lib.hump.camera"
+local Object = require "lib.classic"
+local Camera = require "lib.hump.camera"
 require "engine.collision_handler"
 require "colliders.collider"
 require "colliders.platform"
 require "engine.hud"
 require "actors.player"
 require "scenes.pause"
+-- ideally this would be imported as prey but prey is a global var already cos im bad at this
+local survivors = require "actors.prey"
 
 -- stuff common to all levels will end up here once i figure out what that actually is
--- levels should extend this
 Level = Object:extend()
 
--- initialise the level
 function Level:new(filename, player_x, player_y, width, height)
     -- initialize prey
     prey = {}
@@ -148,10 +148,12 @@ function loadColliders(filename)
                 collisionHandler:add(Platform(unpack(fields, 2)))
             elseif fields[1] == "s" then
                 -- prey (s for survivor, since p is in use)
-                prey[Prey(fields[2], tonumber(fields[3]), tonumber(fields[4]))] = true
+                local species = survivors.get_random_species()
+                prey[species:newPrey(tonumber(fields[2]), tonumber(fields[3]))] = true
             elseif fields[1] == "t" then
                 -- taur
-                prey[Prey(fields[2], tonumber(fields[3]), tonumber(fields[4]))] = true
+                local taur = survivors.species.taur
+                prey[taur:newPrey(tonumber(fields[2]), tonumber(fields[3]))] = true
             end
         end
     end

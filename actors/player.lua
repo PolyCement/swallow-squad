@@ -1,9 +1,7 @@
 require "colliders.collider"
 require "engine.animated_sprite"
-require "lib.classic"
-
--- rrerr
-Player = Collider:extend()
+local Object = require "lib.classic"
+local survivors = require "actors.prey"
 
 -- pixels per meter
 -- use this to specify things in meters rather than pixels
@@ -33,7 +31,7 @@ local MAX_JUMPS = 3
 local JIGGLE_PREVENTION = 5
 
 -- template for state modelling
-PlayerState = Object:extend()
+local PlayerState = Object:extend()
 
 function PlayerState:new(player)
     -- track the player object so we can swap its state
@@ -57,7 +55,7 @@ function PlayerState:keyPressed(key)
 end
 
 function PlayerState:onCollision(obj, colliding_side)
-    if obj:is(Prey) then
+    if obj:is(survivors.Prey) then
         self.player:eat(obj:getWeight())
     end
     if obj:isSolid() then
@@ -70,7 +68,7 @@ function PlayerState:onCollision(obj, colliding_side)
 end
 
 -- states
-StandingState = PlayerState:extend()
+local StandingState = PlayerState:extend()
 
 function StandingState:enter()
     self.player.jumpsLeft = MAX_JUMPS
@@ -111,7 +109,7 @@ function StandingState:keyPressed(key)
     end
 end
 
-RunningState = PlayerState:extend()
+local RunningState = PlayerState:extend()
 
 function RunningState:enter()
     self.player.jumpsLeft = MAX_JUMPS
@@ -151,7 +149,7 @@ function RunningState:keyPressed(key)
     end
 end
 
-JumpingState = PlayerState:extend()
+local JumpingState = PlayerState:extend()
 
 function JumpingState:new(player)
     JumpingState.super.new(self, player)
@@ -210,7 +208,7 @@ function JumpingState:onCollision(obj, colliding_side)
     end
 end
 
-FallingState = PlayerState:extend()
+local FallingState = PlayerState:extend()
 
 function FallingState:enter()
     self.player:setAnimation("fall")
@@ -243,6 +241,9 @@ function FallingState:onCollision(obj, colliding_side)
         end
     end
 end
+
+-- rrerr
+Player = Collider:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)

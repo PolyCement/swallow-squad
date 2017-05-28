@@ -1,9 +1,12 @@
-Object = require "lib.classic"
+local Object = require "lib.classic"
 require "colliders.collider"
 require "engine.sprite"
 
 -- messages yelled by prey
-local messages = {
+local messages = {}
+
+-- messages for all prey
+messages["all"] = {
     "Finally!",
     "Is this safe?",
     "Cool if I strip first?",
@@ -34,8 +37,41 @@ local messages = {
     "Swallow me already!"
 }
 
+-- species-specific dialogue
+messages["dog"] = {
+    "Awooooo!",
+    "Boof!",
+    "Bork!",
+    "Arf!",
+    "Yip! Yap!",
+    "What a hog, to swallow a dog!",
+    "Get me arf this roof!",
+    "Quick! Wolf me down!"
+}
+
+messages["cat"] = {
+    ":3c",
+    "Get meow-t of here!",
+    "Myelp!",
+    "Mrrrrrrooow?!",
+    "Ugh, watch the fur.",
+    "I promise not to scratch...",
+    "Fancy that, to swallow a cat!",
+    "I taste good, trust me."
+}
+
+messages["taur"] = {
+    "Ready for me?",
+    "Big enough to hold me?",
+    "Got enough room in there?",
+    "Be warned: I'm big!",
+    "Huh, usually I'm the pred.",
+    "Open wide!",
+    "Hurry and vore this taur!"
+}
+
 -- speech bubble used by prey
-SpeechBubble = Object:extend()
+local SpeechBubble = Object:extend()
 
 local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 7)
 font:setFilter("nearest", "nearest", 0)
@@ -83,19 +119,19 @@ function SpeechBubble:draw()
 end
 
 -- tasty!
-Prey = Collider:extend()
+local Prey = Collider:extend()
 
-function Prey:new(image, x, y)
-    -- define the sprite first, then use its dimensions to determine our vertices
-    self.sprite = Sprite(image, x, y, 1, 1)
+function Prey:new(species, x, y)
+    -- please select your vehicle
+    self.species = species
+    -- define the sprite, then use its dimensions to determine our vertices
+    self.sprite = Sprite(self.species:getImagePath(), x, y, 1, 1)
     local x2 = x + self.sprite:getWidth() - 2
     local y2 = y + self.sprite:getHeight() - 2
     Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
     -- stuff for shouting at the player
     self.speechBubble = SpeechBubble(x2, y)
     self.shouting = false
-    -- how heavy are we
-    self.weight = 1
     -- are we looking left?
     self.facingLeft = true
     -- register with collision handler
@@ -121,7 +157,7 @@ function Prey:update()
     if pos:dist(player_pos) < 256 then
         if not self.shouting then
             self.shouting = true
-            self.speechBubble:setMessage(messages[math.random(#messages)])
+            self.speechBubble:setMessage(self.species:getMessage())
         end
     else
         self.shouting = false
@@ -144,18 +180,57 @@ function Prey:onCollision(obj)
 end
 
 function Prey:getWeight()
+    return self.species:getWeight()
+end
+
+-- species (type objects so i don't have to subclass every single prey type)
+local Species = Object:extend()
+
+function Species:new(imagepath, messagetype, weight)
+    self.imagepath = imagepath
+    self.weight = weight or 1
+    -- build message list
+    self.messages = {unpack(messages["all"])}
+    for idx = 1, #messages[messagetype] do
+        self.messages[#self.messages+1] = messages[messagetype][idx]
+    end
+end
+
+function Species:getImagePath()
+    return self.imagepath
+end
+
+function Species:getMessage()
+    return self.messages[math.random(#self.messages)]
+end
+
+function Species:getWeight()
     return self.weight
 end
 
--- tasty but filling
-Taur = Prey:extend()
-
-function Taur:new(...)
-    Taur.super.new(self, ...)
-    self.weight = 3
+function Species:newPrey(x, y)
+    return Prey(self, x, y)
 end
 
-function Taur:onCollision(obj)
-    -- put some code here to tell the player they vored that taur
-    Taur.super.onCollision(self, obj)
+local species = {}
+
+species["wolf"] = Species("assets/images/prey_wolf.png", "dog")
+species["cat"] = Species("assets/images/prey_wolf.png", "cat")
+species["taur"] = Species("assets/images/taur_fox.png", "taur", 3)
+
+-- returns a random non-taur species
+local function get_random_species()
+    local all_species = {}
+    for k, v in pairs(species) do
+        if k ~= "taur" then
+            all_species[#all_species+1] = v
+        end
+    end
+    return all_species[math.random(#all_species)]
 end
+
+return {
+    Prey = Prey,
+    species = species,
+    get_random_species = get_random_species
+}

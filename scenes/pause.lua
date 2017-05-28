@@ -1,5 +1,5 @@
 require "engine.sprite"
-Object = require "lib.classic"
+local Object = require "lib.classic"
 suit = require "lib.suit"
 
 -- adjust suit theme

@@ -26,6 +26,7 @@ function love.load()
     Gamestate.registerEvents()
 
     -- wrap love.update in some code that limits dt so we don't fall through the floor
+    -- todo: full-blown fixed timestep?
     local old_update = love.update
     love.update = function(dt)
         -- if dt is too big do multiple updates
