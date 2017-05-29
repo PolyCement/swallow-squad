@@ -1,6 +1,6 @@
-require "engine.sprite"
 local Object = require "lib.classic"
-suit = require "lib.suit"
+local sprite = require "engine.sprite"
+local suit = require "lib.suit"
 
 -- adjust suit theme
 suit.theme.cornerRadius = 0
@@ -11,7 +11,7 @@ suit.theme.color = {
 }
 
 -- it's a pause menu
-Pause = Object:extend()
+local Pause = Object:extend()
 
 function Pause:enter(previous)
     -- keep track of the previous scene so we can keep drawing it in the background
@@ -27,14 +27,14 @@ function Pause:enter(previous)
     -- load up the blades
     local blade_overhang = 40
     local blade_left_x = self.x - blade_overhang
-    self.bladeLeft = Sprite("assets/images/gui_blade.png", blade_left_x, self.y)
+    self.bladeLeft = sprite.Sprite("assets/images/gui_blade.png", blade_left_x, self.y)
     self.bladeLeft:flip()
     self.bladeLeft:flip("vertical")
-    self.bladeRight = Sprite("assets/images/gui_blade.png")
+    self.bladeRight = sprite.Sprite("assets/images/gui_blade.png")
     local blade_right_x = self.x + self.width + blade_overhang - self.bladeRight:getWidth()
     self.bladeRight:setPos(blade_right_x, self.y)
     self.bladeRight:flip("vertical")
-    self.bladeCenter = Sprite("assets/images/gui_center.png")
+    self.bladeCenter = sprite.Sprite("assets/images/gui_center.png")
     local blade_center_x = self.x + (self.width - self.bladeCenter:getWidth()) / 2
     self.bladeCenter:setPos(blade_center_x, self.y - 2)
     -- what action should be performed
@@ -49,7 +49,7 @@ function Pause:update(dt)
     elseif self.action == "restart" then
         Gamestate.switch(self.previous)
     elseif self.action == "return" then
-        Gamestate.switch(main_menu)
+        Gamestate.switch(MainMenu)
     elseif self.action == "quit" then
         love.event.quit()
     end
@@ -89,3 +89,5 @@ function Pause:keypressed(key)
         Gamestate.pop()
     end
 end
+
+return Pause

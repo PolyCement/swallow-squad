@@ -1,7 +1,7 @@
 local Object = require "lib.classic"
 
 -- a simple clock
-Clock = Object:extend()
+local Clock = Object:extend()
 
 function Clock:new()
     self.time = 0
@@ -18,17 +18,15 @@ function Clock:getFormattedTime()
 end
 
 -- the hud
-Hud = Object:extend()
+local Hud = Object:extend()
 
 function Hud:new()
     -- the clock
     self.clock = Clock()
     self.preyCount = table.length(prey)
-
     -- gui blade sprite and y position
     self.blade = love.graphics.newImage("assets/images/gui_blade.png")
     self.bladeY = love.graphics.getHeight() - self.blade:getHeight()
-
     -- text positions
     self.textY = love.graphics.getHeight() - 40
     self.clockX = 12
@@ -70,3 +68,7 @@ function Hud:drawEndMessage()
     love.graphics.printf(message, x, y, text_width, "center")
     love.graphics.setColor(255, 255, 255, 255)
 end
+
+return {
+    Hud = Hud
+}

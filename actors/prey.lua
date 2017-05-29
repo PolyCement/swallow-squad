@@ -1,6 +1,6 @@
 local Object = require "lib.classic"
-require "colliders.collider"
-require "engine.sprite"
+local sprite = require "engine.sprite"
+local colliders = require "engine.colliders"
 
 -- messages yelled by prey
 local messages = {}
@@ -79,7 +79,7 @@ font:setFilter("nearest", "nearest", 0)
 -- x and y denote lower left position of speech bubble (ie. source of the bubble's tail)
 function SpeechBubble:new(x, y)
     -- sprite for speech bubble tail
-    self.tailSprite = Sprite("assets/images/shout_tail.png")
+    self.tailSprite = sprite.Sprite("assets/images/shout_tail.png")
     self.tailSprite:setPos(x, y - self.tailSprite:getHeight())
     -- x positions don't change
     self.black_x = x
@@ -119,13 +119,13 @@ function SpeechBubble:draw()
 end
 
 -- tasty!
-local Prey = Collider:extend()
+local Prey = colliders.Collider:extend()
 
 function Prey:new(species, x, y)
     -- please select your vehicle
     self.species = species
     -- define the sprite, then use its dimensions to determine our vertices
-    self.sprite = Sprite(self.species:getImagePath(), x, y, 1, 1)
+    self.sprite = sprite.Sprite(self.species:getImagePath(), x, y, 1, 1)
     local x2 = x + self.sprite:getWidth() - 2
     local y2 = y + self.sprite:getHeight() - 2
     Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
@@ -173,7 +173,7 @@ end
 
 -- remove when eaten
 function Prey:onCollision(obj)
-    if obj:is(Player) and not obj:isFull() then
+    if obj == player and not obj:isFull() then
         collisionHandler:remove(self)
         prey[self] = nil
     end

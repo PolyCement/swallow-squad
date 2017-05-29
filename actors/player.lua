@@ -1,7 +1,8 @@
-require "colliders.collider"
-require "engine.animated_sprite"
 local Object = require "lib.classic"
+local vector = require "lib.hump.vector"
 local survivors = require "actors.prey"
+local sprite = require "engine.sprite"
+local colliders = require "engine.colliders"
 
 -- pixels per meter
 -- use this to specify things in meters rather than pixels
@@ -243,7 +244,7 @@ function FallingState:onCollision(obj, colliding_side)
 end
 
 -- rrerr
-Player = Collider:extend()
+local Player = colliders.Collider:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
@@ -252,8 +253,8 @@ function Player:new(x, y)
     local y2 = y + 128
     Player.super.new(self, true, x, y, x2, y, x2, y2, x, y2)
     -- sprite
-    self.sprite = AnimatedSprite(130, 152, "assets/images/swallow.png",
-                                 self.vertices[1].x, self.vertices[1].y, 65, 23, width)
+    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png",
+                                        self.vertices[1].x, self.vertices[1].y, 65, 23, width)
     -- register animations
     for i=1, 5 do
         self.sprite:addAnimation("stand" .. i, 9, i, 1)
@@ -371,3 +372,5 @@ end
 function Player:__tostring()
     return "Player"
 end
+
+return Player
