@@ -119,30 +119,55 @@ function SpeechBubble:draw()
 end
 
 -- tasty!
-local Prey = colliders.Collider:extend()
+local Prey = Object:extend()
 
 function Prey:new(species, x, y)
     -- please select your vehicle
     self.species = species
-    -- define the sprite, then use its dimensions to determine our vertices
+    -- define the sprite, then use its dimensions to determine collider size
     self.sprite = sprite.Sprite(self.species:getImagePath(), x, y, 1, 1)
     local x2 = x + self.sprite:getWidth() - 2
     local y2 = y + self.sprite:getHeight() - 2
-    Prey.super.new(self, false, x, y, x2, y, x2, y2, x, y2)
+    self.collider = colliders.Trigger(x, y, x2, y, x2, y2, x, y2)
+    self.collider:setTag("prey")
+    self.collider:setParent(self)
+    collisionHandler:add(self.collider)
+    -- define look trigger
+    local lx, ly = (x + x2) / 2 - 256, (y + y2) / 2 - 256
+    local lx2, ly2 = lx + 512, ly + 512
+    self.lookTrigger = colliders.Trigger(lx, ly, lx2, ly, lx2, ly2, lx, ly2)
+    self.lookTrigger:setCallback(function (obj)
+        if obj:getTag() == "player" then
+            self:lookAt(obj:getParent():getPos().x)
+            self.playerClose = true
+        end
+    end)
+    collisionHandler:add(self.lookTrigger)
     -- stuff for shouting at the player
     self.speechBubble = SpeechBubble(x2, y)
+    self.playerClose = false
     self.shouting = false
     -- are we looking left?
     self.facingLeft = true
-    -- register with collision handler
-    collisionHandler:add(self)
 end
 
 function Prey:update()
-    local pos = self:getCenter()
-    local player_pos = player:getCenter()
+    -- SHOUT, SHOUT, LET IT ALL OUT
+    if self.playerClose then
+        if not self.shouting then
+            self.shouting = true
+            self.speechBubble:setMessage(self.species:getMessage())
+        end
+    else
+        self.shouting = false
+    end
+    self.playerClose = false
+end
+
+function Prey:lookAt(x)
+    local own_x = self.collider:getCenter().x
     -- turn to face the player
-    if player_pos.x - pos.x < 0 then
+    if x - own_x < 0 then
         if not self.facingLeft then 
             self.sprite:flip()
             self.facingLeft = true
@@ -153,15 +178,6 @@ function Prey:update()
             self.facingLeft = false
         end
     end
-    -- yell when the player gets close
-    if pos:dist(player_pos) < 256 then
-        if not self.shouting then
-            self.shouting = true
-            self.speechBubble:setMessage(self.species:getMessage())
-        end
-    else
-        self.shouting = false
-    end
 end
 
 function Prey:draw()
@@ -171,12 +187,10 @@ function Prey:draw()
     self.sprite:draw()
 end
 
--- remove when eaten
-function Prey:onCollision(obj)
-    if obj == player and not obj:isFull() then
-        collisionHandler:remove(self)
-        prey[self] = nil
-    end
+-- remove, called when eaten
+function Prey:remove()
+    collisionHandler:remove(self.collider)
+    prey[self] = nil
 end
 
 function Prey:getWeight()
@@ -215,6 +229,7 @@ end
 local species = {}
 
 species["wolf"] = Species("assets/images/prey_wolf.png", "dog")
+species["dog"] = Species("assets/images/prey_dog.png", "dog")
 species["cat"] = Species("assets/images/prey_wolf.png", "cat")
 species["taur"] = Species("assets/images/taur_fox.png", "taur", 3)
 
@@ -230,7 +245,7 @@ local function get_random_species()
 end
 
 return {
-    Prey = Prey,
+    Prey = Prey, -- player needs this to check if what it hits is prey, ideally it should be hidden
     species = species,
     get_random_species = get_random_species
 }

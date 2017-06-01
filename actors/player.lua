@@ -48,16 +48,17 @@ function PlayerState:update(dt)
     -- update position
     local delta = self.player.velocity * dt
     -- attempt to move
-    self.player.prevBottomPos = (self.player.vertices[3] + self.player.vertices[4]) / 2
-    self.player:move(delta)
+    local collider = self.player.collider
+    self.player.prevBottomPos = (collider:getVertex(3) + collider:getVertex(4)) / 2
+    collider:move(delta)
 end
 
 function PlayerState:keyPressed(key)
 end
 
 function PlayerState:onCollision(obj, colliding_side)
-    if obj:is(survivors.Prey) then
-        self.player:eat(obj:getWeight())
+    if obj:getTag() == "prey" then
+        self.player:eat(obj:getParent())
     end
     if obj:isSolid() then
         if colliding_side == side.bottom or colliding_side == side.top then
@@ -66,6 +67,10 @@ function PlayerState:onCollision(obj, colliding_side)
             self.player.velocity.x = 0
         end
     end
+end
+
+function PlayerState:__tostring()
+    return "PlayerState"
 end
 
 -- states
@@ -244,17 +249,22 @@ function FallingState:onCollision(obj, colliding_side)
 end
 
 -- rrerr
-local Player = colliders.Collider:extend()
+local Player = Object:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
     local width = 32
     local x2 = x + width
     local y2 = y + 128
-    Player.super.new(self, true, x, y, x2, y, x2, y2, x, y2)
-    -- sprite
-    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png",
-                                        self.vertices[1].x, self.vertices[1].y, 65, 23, width)
+    -- define components
+    self.collider = colliders.Collider(x, y, x2, y, x2, y2, x, y2)
+    self.collider:setCallback(function (obj, colliding_side)
+        -- note: self is closed in here, it's not a parameter
+        self.state:onCollision(obj, colliding_side)
+    end)
+    self.collider:setTag("player")
+    self.collider:setParent(self)
+    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, width)
     -- register animations
     for i=1, 5 do
         self.sprite:addAnimation("stand" .. i, 9, i, 1)
@@ -278,14 +288,15 @@ function Player:new(x, y)
     self.falling = FallingState(self)
     self.state = self.standing
     -- where was our bottom edge before we moved? (used for one-way platforms)
-    self.prevBottomPos = (self.vertices[3] + self.vertices[4]) / 2
+    -- todo: figure out if one-way platforms can be made to work without this
+    self.prevBottomPos = vector(0, 0)
     -- what's our current animation
     self.currentAnimation = "stand"
 end
 
 function Player:update(dt)
     self.state:update(dt)
-    self.sprite:setPos(self.vertices[1]:unpack())
+    self.sprite:setPos(self.collider:getVertex(1):unpack())
 end
 
 function Player:draw()
@@ -294,10 +305,6 @@ end
 
 function Player:keyPressed(key)
     self.state:keyPressed(key)
-end
-
-function Player:onCollision(obj, colliding_side)
-    self.state:onCollision(obj, colliding_side)
 end
 
 -- switch to the given state and run its enter() function
@@ -320,9 +327,17 @@ function Player:accelerate(a)
 end
 
 -- u r now entering the vore zone
-function Player:eat(weight)
-    self.fullness = self.fullness + weight
-    -- apply movement penalties
+function Player:eat(prey)
+    local weight = prey:getWeight()
+    local new_fullness = self.fullness + weight
+    -- do nothing if we don't have room
+    if new_fullness > MAX_CAPACITY then
+        return
+    end
+    -- remove prey
+    prey:remove()
+    -- update player
+    self.fullness = new_fullness
     self.runSpeed = self.runSpeed - SPEED_PENALTY * weight
     self.acceleration = self.acceleration - ACC_PENALTY * weight
     -- this is kinda gross but i'll change it when i add rescue anims anyway
@@ -339,7 +354,7 @@ end
 
 -- used to tell the camera where to look
 function Player:getPos()
-    return self:getCenter()
+    return self.collider:getCenter()
 end
 
 -- used to keep the player stuck to slopes
@@ -347,9 +362,9 @@ function Player:snapToGround()
     -- cast a tiny ray from our back edge
     local back_corner = nil
     if self.velocity.x < 0 then
-        back_corner = self.vertices[3]
+        back_corner = self.collider:getVertex(3)
     else
-        back_corner = self.vertices[4]
+        back_corner = self.collider:getVertex(4)
     end
     -- 8 is a long beam but needed to handle ~45 degree slopes while empty
     local ray_end = back_corner + vector(0, 8)
@@ -361,7 +376,7 @@ function Player:snapToGround()
         -- (this fixes issues with the ray catching a slight slope while ascending)
         if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
             local delta = vector(0, intersect.y - back_corner.y)
-            self:move(delta)
+            self.collider:move(delta)
             -- rounding means we might not quite touch the slope
             -- so we gotta reset y velocity to stop us immediately entering the fall state
             self.velocity.y = 0

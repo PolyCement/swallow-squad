@@ -206,8 +206,8 @@ function CollisionHandler:checkCollision(obj)
         end
         if colliding_side then
             -- hit that mf callback button
-            obj:onCollision(collider, colliding_side, mtd)
-            collider:onCollision(obj, -colliding_side, mtd)
+            obj.onCollision(collider, colliding_side, mtd)
+            collider.onCollision(obj, -colliding_side, mtd)
         end
     end
     -- only apply the biggest mtd in each dimension

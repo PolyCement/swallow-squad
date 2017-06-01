@@ -69,6 +69,4 @@ function Hud:drawEndMessage()
     love.graphics.setColor(255, 255, 255, 255)
 end
 
-return {
-    Hud = Hud
-}
+return Hud

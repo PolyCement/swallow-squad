@@ -1,8 +1,8 @@
 local Object = require "lib.classic"
 local vector = require "lib.hump.vector"
 
--- a polygonal collider
--- should an object collide with other objects? then it should extend this!
+-- polygonal colliders
+-- they're components now btw
 
 -- this is an edge
 local Segment = Object:extend()
@@ -26,9 +26,7 @@ end
 local Collider = Object:extend()
 
 -- assumes clockwise winding
--- first arg denotes solidity, the rest are alternating x and y coords of each vertex
-function Collider:new(solid, ...)
-    self.solid = solid
+function Collider:new(...)
     -- store coordinates as vertices
     local args = {...}
     self.vertices = {}
@@ -40,6 +38,35 @@ function Collider:new(solid, ...)
     for i = 1, #self.vertices do
         table.insert(self.edges, Segment(self.vertices[i], self.vertices[1+i%(#self.vertices)]))
     end
+    -- solidity
+    self.solid = true
+    -- callback function
+    self.onCollision = function() end
+    -- tag (so other colliders know what hit em)
+    self.tag = ""
+    -- parent, for when a collider's parents need to know about each other in order to react properly
+    -- (only useful for a handful of colliders, so it's optional)
+    self.parent = nil
+end
+
+function Collider:setCallback(func)
+    self.onCollision = func
+end
+
+function Collider:getTag()
+    return self.tag
+end
+
+function Collider:setTag(tag)
+    self.tag = tag
+end
+
+function Collider:getParent()
+    return self.parent
+end
+
+function Collider:setParent(parent)
+    self.parent = parent
 end
 
 -- draw the collider's bounding box
@@ -82,14 +109,16 @@ function Collider:movementHelper(delta)
     end
 end
 
--- callback function, subclasses should override this
-function Collider:onCollision()
-end
-
 function Collider:isSolid()
     return self.solid
 end
 
+-- get one vertex
+function Collider:getVertex(idx)
+    return self.vertices[idx]
+end
+
+-- get all the vertices
 function Collider:getVertices()
     return self.vertices
 end
@@ -111,9 +140,9 @@ end
 -- a one-way platform
 local Platform = Collider:extend()
 
--- assumes b is to the right of a
+-- a on the left, b on the right
 function Platform:new(a_x, a_y, b_x, b_y)
-    Platform.super.new(self, true, a_x, a_y, b_x, b_y) 
+    Platform.super.new(self, a_x, a_y, b_x, b_y) 
 end
 
 -- platforms are only solid if the player was above them on the previous cycle
@@ -129,7 +158,16 @@ function Platform:isSolid()
     return determinant < 0
 end
 
+-- a non-solid collider
+local Trigger = Collider:extend()
+
+function Trigger:new(...)
+    Trigger.super.new(self, ...)
+    self.solid = false
+end
+
 return {
     Collider = Collider,
-    Platform = Platform
+    Platform = Platform,
+    Trigger = Trigger
 }

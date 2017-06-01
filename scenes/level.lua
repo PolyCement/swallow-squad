@@ -1,6 +1,6 @@
 local Object = require "lib.classic"
 local Camera = require "lib.hump.camera"
-local hud = require "engine.hud"
+local Hud = require "engine.hud"
 -- ideally this would be imported as prey but prey is a global var already cos im bad at this
 local survivors = require "actors.prey"
 local CollisionHandler = require "engine.collision_handler"
@@ -37,7 +37,7 @@ local function load_colliders(filename)
                 for idx = 2, #fields do
                     fields[idx] = tonumber(fields[idx])
                 end
-                collisionHandler:add(colliders.Collider(true, unpack(fields, 2)))
+                collisionHandler:add(colliders.Collider(unpack(fields, 2)))
             elseif fields[1] == "p" then
                 -- standard collider
                 for idx = 2, #fields do
@@ -98,8 +98,13 @@ function Level:new(filename, player_x, player_y, width, height)
     player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
+    -- make prey face the player
+    for p, _ in pairs(prey) do
+        p:lookAt(player_x)
+    end
+
     -- hud
-    self.hud = hud.Hud()
+    self.hud = Hud()
 
     -- level width and height (for restricting camera)
     self.width = width
