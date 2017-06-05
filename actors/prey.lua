@@ -190,6 +190,7 @@ end
 -- remove, called when eaten
 function Prey:remove()
     collisionHandler:remove(self.collider)
+    collisionHandler:remove(self.lookTrigger)
     prey[self] = nil
 end
 
@@ -245,7 +246,6 @@ local function get_random_species()
 end
 
 return {
-    Prey = Prey, -- player needs this to check if what it hits is prey, ideally it should be hidden
     species = species,
     get_random_species = get_random_species
 }

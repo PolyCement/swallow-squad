@@ -180,7 +180,7 @@ function CollisionHandler:checkCollision(obj)
         if mtd then
             num_collisions = num_collisions + 1
             -- record the mtd for solid colliders
-            if collider:isSolid() then
+            if collider:isSolid(obj) then
                 table.insert(all_mtds_x, mtd.x)
                 table.insert(all_mtds_y, mtd.y)
             end

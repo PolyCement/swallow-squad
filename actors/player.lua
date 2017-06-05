@@ -60,7 +60,7 @@ function PlayerState:onCollision(obj, colliding_side)
     if obj:getTag() == "prey" then
         self.player:eat(obj:getParent())
     end
-    if obj:isSolid() then
+    if obj:isSolid(self.player.collider) then
         if colliding_side == side.bottom or colliding_side == side.top then
             self.player.velocity.y = 0
         elseif colliding_side == side.left or colliding_side == side.right then
@@ -207,7 +207,7 @@ end
 
 function JumpingState:onCollision(obj, colliding_side)
     JumpingState.super.onCollision(self, obj, colliding_side)
-    if obj:isSolid() then
+    if obj:isSolid(self.player.collider) then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
         end
@@ -241,7 +241,7 @@ end
 
 function FallingState:onCollision(obj, colliding_side)
     FallingState.super.onCollision(self, obj, colliding_side)
-    if obj:isSolid() then
+    if obj:isSolid(self.player.collider) then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
         end

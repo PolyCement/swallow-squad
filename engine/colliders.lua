@@ -88,16 +88,8 @@ function Collider:drawBoundingBox()
     love.graphics.setColor(r, g, b, a)
 end
 
--- move by the requested amount, correct our position if we hit something
-function Collider:move(delta)
-    self:movementHelper(delta)
-    local correction_delta = collisionHandler:checkCollision(self)
-    self:movementHelper(correction_delta)
-end
-
 -- move by the requested amount, no collision handling
--- do not use outside of collider!!!!!!!!!!!
-function Collider:movementHelper(delta)
+local function movement_helper(self, delta)
     for i, v in pairs(self.vertices) do
         self.vertices[i] = v + delta
     end
@@ -107,6 +99,13 @@ function Collider:movementHelper(delta)
         v.a = v.a + delta
         v.b = v.b + delta
     end
+end
+
+-- move by the requested amount, correct our position if we hit something
+function Collider:move(delta)
+    movement_helper(self, delta)
+    local correction_delta = collisionHandler:checkCollision(self)
+    movement_helper(self, correction_delta)
 end
 
 function Collider:isSolid()
@@ -145,14 +144,15 @@ function Platform:new(a_x, a_y, b_x, b_y)
     Platform.super.new(self, a_x, a_y, b_x, b_y) 
 end
 
--- platforms are only solid if the player was above them on the previous cycle
-function Platform:isSolid()
-    -- if the player was above the bounding box of the platform, stay solid (allows hanging on edges)
-    if player.prevBottomPos.y <= math.min(self.vertices[1].y, self.vertices[2].y) then
+-- platforms are only solid if the given collider was above them on the previous cycle
+function Platform:isSolid(collider)
+    local obj = collider:getParent()
+    -- if the collider was above the bounding box of the platform, stay solid (allows hanging on edges)
+    if obj.prevBottomPos.y <= math.min(self.vertices[1].y, self.vertices[2].y) then
         return true
     end
     -- if the determinant of ba and "ca" is negative, we're above the platform
-    local ca = player.prevBottomPos - self.vertices[1]
+    local ca = obj.prevBottomPos - self.vertices[1]
     local ba = self.edges[1].direction
     local determinant = ba.x * ca.y - ba.y * ca.x
     return determinant < 0

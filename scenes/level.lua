@@ -62,8 +62,8 @@ end
 -- restrain the camera to stay between (0, 0) and (width, height)
 -- don't bind on nil dimensions
 -- todo: make this suck less
-local function bind_camera(width, height)
-    local camera_pos = player:getPos()
+local function bind_camera(width, height, player_pos)
+    local camera_pos = player_pos
     if width then
         local min_cam_bound_x = love.graphics.getWidth() / 2
         local max_cam_bound_x = width - love.graphics.getWidth() / 2
@@ -95,7 +95,7 @@ function Level:new(filename, player_x, player_y, width, height)
     load_colliders(filename)
 
     -- define player & camera, start em both at the same coordinates
-    player = Player(player_x, player_y)
+    self.player = Player(player_x, player_y)
     camera = Camera(player_x, player_y)
 
     -- make prey face the player
@@ -122,8 +122,8 @@ function Level:update(dt)
     -- update stuff if the game hasn't ended
     if not self:gameEnded() then
         self.hud:update(dt)
-        player:update(dt)
-        camera:lookAt(bind_camera(self.width, self.height):unpack())
+        self.player:update(dt)
+        camera:lookAt(bind_camera(self.width, self.height, self.player:getPos()):unpack())
         for p, _  in pairs(prey) do
             p:update()
         end
@@ -137,7 +137,7 @@ function Level:draw()
         collisionHandler:draw()
     end
     -- draw the player before prey so speech bubbles show on top
-    player:draw()
+    self.player:draw()
     -- draw all prey
     for p, _  in pairs(prey) do
         p:draw()
@@ -175,7 +175,7 @@ function Level:keypressed(key)
             Gamestate.switch(main_menu)
         end
     else
-        player:keyPressed(key)
+        self.player:keyPressed(key)
     end
 end
 
