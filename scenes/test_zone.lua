@@ -1,6 +1,6 @@
 local vector = require "lib.hump.vector"
 local sprite = require "engine.sprite"
-local Level = require "scenes.level"
+local Level = require "engine.scenes.base"
 
 -- test level, for debugging
 local TestZone = Level:extend()

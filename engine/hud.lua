@@ -27,6 +27,9 @@ function Hud:new()
     -- gui blade sprite and y position
     self.blade = love.graphics.newImage("assets/images/gui_blade.png")
     self.bladeY = love.graphics.getHeight() - self.blade:getHeight()
+    -- icons
+    self.clockIcon = love.graphics.newImage("assets/images/hud_clock.png")
+    self.preyIcon = love.graphics.newImage("assets/images/hud_prey.png")
     -- text positions
     self.textY = love.graphics.getHeight() - 40
     self.clockX = 12
@@ -43,15 +46,17 @@ end
 local font = love.graphics.newFont(28)
 function Hud:draw()
     -- draw gui blades
-    love.graphics.draw(self.blade, 0, self.bladeY)
-    love.graphics.draw(self.blade, love.graphics.getWidth(), self.bladeY, 0, -1, 1)
+    -- love.graphics.draw(self.blade, 0, self.bladeY)
+    -- love.graphics.draw(self.blade, love.graphics.getWidth(), self.bladeY, 0, -1, 1)
+    love.graphics.draw(self.clockIcon, 20, love.graphics.getHeight() - 90)
+    love.graphics.draw(self.preyIcon, 50, love.graphics.getHeight() - 50)
     -- set up for drawing text
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(font)
     -- draw the clock
-    love.graphics.print("Time: " .. self.clock:getFormattedTime(), self.clockX, self.textY)
+    love.graphics.print(self.clock:getFormattedTime(), 60, love.graphics.getHeight() - 90)
     -- draw the number of remaining prey
-    love.graphics.print("Survivors: " .. self.preyCount, self.preyCountX, self.textY)
+    love.graphics.print(self.preyCount, 80, love.graphics.getHeight() - 50)
     love.graphics.setColor(255, 255, 255, 255)
 end
 

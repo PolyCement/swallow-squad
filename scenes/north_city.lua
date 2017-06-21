@@ -1,6 +1,6 @@
 local vector = require "lib.hump.vector"
 local sprite = require "engine.sprite"
-local Level = require "scenes.level"
+local Level = require "engine.scenes.base"
 
 -- level 1, north city
 local NorthCity = Level:extend()
@@ -22,9 +22,9 @@ end
 function NorthCity:draw()
     -- draw clouds and level sprite
     clouds:draw()
-    camera:attach()
+    self.camera:attach()
     bg:draw()
-    camera:detach()
+    self.camera:detach()
     -- then draw everything else on top
     NorthCity.super.draw(self)
 end

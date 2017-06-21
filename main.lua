@@ -1,17 +1,8 @@
+require "engine.patches"
 Gamestate = require "lib.hump.gamestate"
 -- if this isn't a global i have to import it in pause and north_city, which becomes cyclic
 -- todo: fix that
 MainMenu = require "scenes.main_menu"
-
--- fun with monkey patches, i can't believe i have to define this myself
--- this should probably go somewhere else
-function table.length(t)
-    local count = 0
-    for _ in pairs(t) do
-        count = count + 1
-    end
-    return count
-end
 
 function love.load()
     -- handle command line args

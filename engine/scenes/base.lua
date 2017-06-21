@@ -8,20 +8,6 @@ local colliders = require "engine.colliders"
 local Pause = require "scenes.pause"
 local Player = require "actors.player"
 
--- TODO: move these monkey patches somewhere else!!!
--- monkey patch to add something resembling python's startswith
-function string.starts(str, sub_str)
-   return string.sub(str, 1, string.len(sub_str)) == sub_str
-end
-
--- and another to add a split function
-function string.split(str, delimiter)
-    local delimiter, fields = delimiter or ",", {}
-    local pattern = "([^" .. delimiter.. "]+)"
-    string.gsub(str, pattern, function(x) table.insert(fields, x) end)
-    return fields
-end
-
 -- loads colliders defined by the given file into the collision handler
 local function load_colliders(filename)
     -- open the file
@@ -96,7 +82,7 @@ function Level:new(filename, player_x, player_y, width, height)
 
     -- define player & camera, start em both at the same coordinates
     self.player = Player(player_x, player_y)
-    camera = Camera(player_x, player_y)
+    self.camera = Camera(player_x, player_y)
 
     -- make prey face the player
     for p, _ in pairs(prey) do
@@ -123,7 +109,7 @@ function Level:update(dt)
     if not self:gameEnded() then
         self.hud:update(dt)
         self.player:update(dt)
-        camera:lookAt(bind_camera(self.width, self.height, self.player:getPos()):unpack())
+        self.camera:lookAt(bind_camera(self.width, self.height, self.player:getPos()):unpack())
         for p, _  in pairs(prey) do
             p:update()
         end
@@ -131,7 +117,7 @@ function Level:update(dt)
 end
 
 function Level:draw()
-    camera:attach()
+    self.camera:attach()
     -- draw world colliders
     if showColliders then
         collisionHandler:draw()
@@ -142,7 +128,7 @@ function Level:draw()
     for p, _  in pairs(prey) do
         p:draw()
     end
-    camera:detach()
+    self.camera:detach()
     -- draw the timer
     if self:gameEnded() then
         self.hud:drawEndMessage()
@@ -172,7 +158,7 @@ function Level:keypressed(key)
     -- if the game has ended ignore everything but enter
     if self:gameEnded() then
         if key == "return" then
-            Gamestate.switch(main_menu)
+            Gamestate.switch(MainMenu)
         end
     else
         self.player:keyPressed(key)
@@ -184,7 +170,7 @@ function Level:mousemoved(x, y)
     if showMousePos then
         local adjusted_x = x - love.graphics.getWidth() / 2
         local adjusted_y = y - love.graphics.getHeight() / 2
-        local cam_x, cam_y = camera:position()
+        local cam_x, cam_y = self.camera:position()
         print(math.floor(adjusted_x + cam_x), math.floor(adjusted_y + cam_y))
     end
 end
