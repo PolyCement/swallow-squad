@@ -90,7 +90,7 @@ function Level:new(filename, player_x, player_y, width, height)
     end
 
     -- hud
-    self.hud = Hud()
+    self.hud = Hud(table.length(prey))
 
     -- level width and height (for restricting camera)
     self.width = width
@@ -107,7 +107,7 @@ end
 function Level:update(dt)
     -- update stuff if the game hasn't ended
     if not self:gameEnded() then
-        self.hud:update(dt)
+        self.hud:update(dt, table.length(prey))
         self.player:update(dt)
         self.camera:lookAt(bind_camera(self.width, self.height, self.player:getPos()):unpack())
         for p, _  in pairs(prey) do

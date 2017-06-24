@@ -31,7 +31,6 @@ messages["all"] = {
     "Savour me...",
     "Devour me!",
     "But how do I get out?",
-    "Can I... y'know... in there?",
     "Uh? How do we get out?",
     "Just gobble me up!",
     "Swallow me already!"

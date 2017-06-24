@@ -61,7 +61,7 @@ function Pause:update(dt)
         self.action = "resume"
     elseif suit.Button("Restart", suit.layout:row(self.buttonW, self.buttonH)).hit then
         self.action = "restart"
-    elseif suit.Button("Quit to Main Menu", suit.layout:row(self.buttonW, self.buttonH)).hit then
+    elseif suit.Button("Quit to Menu", suit.layout:row(self.buttonW, self.buttonH)).hit then
         self.action = "return"
     elseif suit.Button("Quit to Desktop", suit.layout:row(self.buttonW, self.buttonH)).hit then
         self.action = "quit"

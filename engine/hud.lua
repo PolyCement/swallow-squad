@@ -20,43 +20,44 @@ end
 -- the hud
 local Hud = Object:extend()
 
-function Hud:new()
+function Hud:new(num_prey)
     -- the clock
     self.clock = Clock()
-    self.preyCount = table.length(prey)
-    -- gui blade sprite and y position
-    self.blade = love.graphics.newImage("assets/images/gui_blade.png")
-    self.bladeY = love.graphics.getHeight() - self.blade:getHeight()
+    -- prey tracking
+    self.maxPrey = num_prey
+    self.preyCollected = 0
     -- icons
     self.clockIcon = love.graphics.newImage("assets/images/hud_clock.png")
     self.preyIcon = love.graphics.newImage("assets/images/hud_prey.png")
-    -- text positions
-    self.textY = love.graphics.getHeight() - 40
-    self.clockX = 12
-    self.preyCountX = 603
+    -- positions
+    self.clockPosX = 20
+    self.clockPosY = love.graphics.getHeight() - 90
+    self.clockTextPosX = self.clockPosX + self.clockIcon:getWidth() + 10
+    self.preyPosX = 50
+    self.preyPosY = love.graphics.getHeight() - 50
+    self.preyTextPosX = self.preyPosX + self.preyIcon:getWidth() + 10
 end
 
 -- update clock and remaining prey count
-function Hud:update(dt)
+function Hud:update(dt, num_prey)
     self.clock:update(dt)
-    self.preyCount = table.length(prey)
+    self.preyCollected = self.maxPrey - num_prey
 end
 
 -- draws the hud
-local font = love.graphics.newFont(28)
+local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 24)
 function Hud:draw()
-    -- draw gui blades
-    -- love.graphics.draw(self.blade, 0, self.bladeY)
-    -- love.graphics.draw(self.blade, love.graphics.getWidth(), self.bladeY, 0, -1, 1)
-    love.graphics.draw(self.clockIcon, 20, love.graphics.getHeight() - 90)
-    love.graphics.draw(self.preyIcon, 50, love.graphics.getHeight() - 50)
+    -- draw icons
+    love.graphics.draw(self.clockIcon, self.clockPosX, self.clockPosY)
+    love.graphics.draw(self.preyIcon, self.preyPosX, self.preyPosY)
     -- set up for drawing text
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(font)
     -- draw the clock
-    love.graphics.print(self.clock:getFormattedTime(), 60, love.graphics.getHeight() - 90)
+    love.graphics.print(self.clock:getFormattedTime(), self.clockTextPosX, love.graphics.getHeight() - 85)
     -- draw the number of remaining prey
-    love.graphics.print(self.preyCount, 80, love.graphics.getHeight() - 50)
+    love.graphics.print(self.preyCollected .. "/" .. self.maxPrey,
+                        self.preyTextPosX, love.graphics.getHeight() - 45)
     love.graphics.setColor(255, 255, 255, 255)
 end
 
