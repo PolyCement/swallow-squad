@@ -36,16 +36,34 @@ function Hud:new(num_prey)
     self.preyPosX = 50
     self.preyPosY = love.graphics.getHeight() - 50
     self.preyTextPosX = self.preyPosX + self.preyIcon:getWidth() + 10
+    -- text outline shader
+    self.textShader = love.graphics.newShader("engine/shaders/outline.glsl")
+    -- canvases for drawing text to so that shaders behave themselves
+    self.clockCanvas = love.graphics.newCanvas(92, 24)
+    self.preyCanvas = love.graphics.newCanvas(74, 24)
 end
 
 -- update clock and remaining prey count
+local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 24)
 function Hud:update(dt, num_prey)
+    -- todo: stop canvas being updated unless it needs to be
     self.clock:update(dt)
     self.preyCollected = self.maxPrey - num_prey
+    -- draw clock to canvas
+    self.textShader:send("stepSize", {1/self.clockCanvas:getWidth(), 1/self.clockCanvas:getHeight()})
+    love.graphics.setCanvas(self.clockCanvas)
+        love.graphics.clear()
+        love.graphics.print(self.clock:getFormattedTime(), 1) 
+    love.graphics.setCanvas()
+    -- and prey
+    self.textShader:send("stepSize", {1/self.preyCanvas:getWidth(), 1/self.preyCanvas:getHeight()})
+    love.graphics.setCanvas(self.preyCanvas)
+        love.graphics.clear()
+        love.graphics.print(self.preyCollected .. "/" .. self.maxPrey, 1)
+    love.graphics.setCanvas()
 end
 
 -- draws the hud
-local font = love.graphics.newFont("assets/fonts/StarPerv.ttf", 24)
 function Hud:draw()
     -- draw icons
     love.graphics.draw(self.clockIcon, self.clockPosX, self.clockPosY)
@@ -53,11 +71,14 @@ function Hud:draw()
     -- set up for drawing text
     love.graphics.setColor(0, 0, 0, 255)
     love.graphics.setFont(font)
-    -- draw the clock
-    love.graphics.print(self.clock:getFormattedTime(), self.clockTextPosX, love.graphics.getHeight() - 85)
-    -- draw the number of remaining prey
-    love.graphics.print(self.preyCollected .. "/" .. self.maxPrey,
-                        self.preyTextPosX, love.graphics.getHeight() - 45)
+    -- draw text elements
+    love.graphics.draw(self.clockCanvas, self.clockTextPosX, love.graphics.getHeight() - 85)
+    love.graphics.draw(self.preyCanvas, self.preyTextPosX, love.graphics.getHeight() - 45)
+    -- draw outlines for text elements
+    love.graphics.setShader(self.textShader)
+    love.graphics.draw(self.clockCanvas, self.clockTextPosX, love.graphics.getHeight() - 85)
+    love.graphics.draw(self.preyCanvas, self.preyTextPosX, love.graphics.getHeight() - 45)
+    love.graphics.setShader()
     love.graphics.setColor(255, 255, 255, 255)
 end
 
