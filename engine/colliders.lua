@@ -47,6 +47,8 @@ function Collider:new(...)
     -- parent, for when a collider's parents need to know about each other in order to react properly
     -- (only useful for a handful of colliders, so it's optional)
     self.parent = nil
+    -- Previous position (needed for collision resolution)
+    self.lastPos = vector(0, 0)
 end
 
 function Collider:setCallback(func)
@@ -89,7 +91,10 @@ function Collider:drawBoundingBox()
 end
 
 -- move by the requested amount, no collision handling
-local function movement_helper(self, delta)
+function Collider:move(delta)
+    -- this is dangerous rn cos it assumes we have 4 vertices
+    -- it's gonna be phased out soon tho so whatever
+    self.lastPos = (self.vertices[3] + self.vertices[4]) / 2
     for i, v in pairs(self.vertices) do
         self.vertices[i] = v + delta
     end
@@ -102,11 +107,11 @@ local function movement_helper(self, delta)
 end
 
 -- move by the requested amount, correct our position if we hit something
-function Collider:move(delta)
-    movement_helper(self, delta)
-    local correction_delta = collisionHandler:checkCollision(self)
-    movement_helper(self, correction_delta)
-end
+--function Collider:move(delta)
+--    movement_helper(self, delta)
+--    local correction_delta = collisionHandler:checkCollision(self)
+--    movement_helper(self, correction_delta)
+--end
 
 function Collider:isSolid()
     return self.solid
@@ -146,13 +151,12 @@ end
 
 -- platforms are only solid if the given collider was above them on the previous cycle
 function Platform:isSolid(collider)
-    local obj = collider:getParent()
     -- if the collider was above the bounding box of the platform, stay solid (allows hanging on edges)
-    if obj.prevBottomPos.y <= math.min(self.vertices[1].y, self.vertices[2].y) then
+    if collider.lastPos.y <= math.min(self.vertices[1].y, self.vertices[2].y) then
         return true
     end
     -- if the determinant of ba and "ca" is negative, we're above the platform
-    local ca = obj.prevBottomPos - self.vertices[1]
+    local ca = collider.lastPos - self.vertices[1]
     local ba = self.edges[1].direction
     local determinant = ba.x * ca.y - ba.y * ca.x
     return determinant < 0

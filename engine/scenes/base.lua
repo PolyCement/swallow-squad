@@ -109,6 +109,7 @@ function Level:update(dt)
     if not self:gameEnded() then
         self.hud:update(dt, table.length(prey))
         self.player:update(dt)
+        collisionHandler:resolve()
         self.camera:lookAt(bind_camera(self.width, self.height, self.player:getPos()):unpack())
         for p, _  in pairs(prey) do
             p:update()

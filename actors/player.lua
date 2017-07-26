@@ -49,7 +49,6 @@ function PlayerState:update(dt)
     local delta = self.player.velocity * dt
     -- attempt to move
     local collider = self.player.collider
-    self.player.prevBottomPos = (collider:getVertex(3) + collider:getVertex(4)) / 2
     collider:move(delta)
 end
 
@@ -104,7 +103,7 @@ function StandingState:update(dt)
     StandingState.super.update(self, dt)
     -- if we're falling (ie. we've left the ground) attempt to snap to it
     if self.player.velocity.y > 0 then
-        self.player:snapToGround()
+        -- self.player:snapToGround()
     end
     self.player.sprite:update(dt)
 end
@@ -144,7 +143,7 @@ function RunningState:update(dt)
     end
     RunningState.super.update(self, dt)
     if self.player.velocity.y > 0 then
-        self.player:snapToGround()
+        -- self.player:snapToGround()
     end
     self.player.sprite:update(dt * math.abs(self.player.velocity.x) / MAX_SPEED)
 end
@@ -264,6 +263,7 @@ function Player:new(x, y)
     end)
     self.collider:setTag("player")
     self.collider:setParent(self)
+    collisionHandler:add(self.collider)
     self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, width)
     -- register animations
     for i=1, 5 do
@@ -289,7 +289,7 @@ function Player:new(x, y)
     self.state = self.standing
     -- where was our bottom edge before we moved? (used for one-way platforms)
     -- todo: figure out if one-way platforms can be made to work without this
-    self.prevBottomPos = vector(0, 0)
+    -- self.prevBottomPos = vector(0, 0)
     -- what's our current animation
     self.currentAnimation = "stand"
 end

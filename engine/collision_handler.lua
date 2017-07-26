@@ -166,6 +166,17 @@ function CollisionHandler:raycast(ray_start, ray_end)
     return collisions
 end
 
+-- check for collisions and resolve em
+function CollisionHandler:resolve()
+    -- only check objects that can move: right now, that's the player
+    for collider, _ in pairs(self.colliders) do
+        if collider:getTag() == "player" then
+            local delta = self:checkCollision(collider)
+            collider:move(delta)
+        end
+    end
+end
+
 -- check for collisions at the position we end up at with the given delta
 -- execute the callback function of any colliding objects
 -- returns the delta resulting from collisions with the environment
