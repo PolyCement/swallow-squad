@@ -7,6 +7,7 @@ local CollisionHandler = require "engine.collision_handler"
 local colliders = require "engine.colliders"
 local Pause = require "scenes.pause"
 local Player = require "actors.player"
+local TiledMap = require "engine.tiledmap"
 
 -- loads colliders defined by the given file into the collision handler
 local function load_colliders(filename)
@@ -78,7 +79,8 @@ function Level:new(filename, player_x, player_y, width, height)
 
     -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler()
-    load_colliders(filename)
+    -- load_colliders(filename)
+    self.map = TiledMap(filename)
 
     -- define player & camera, start em both at the same coordinates
     self.player = Player(player_x, player_y)
@@ -119,6 +121,7 @@ end
 
 function Level:draw()
     self.camera:attach()
+    self.map:draw()
     -- draw world colliders
     if showColliders then
         collisionHandler:draw()

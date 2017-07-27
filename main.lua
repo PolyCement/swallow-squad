@@ -5,6 +5,8 @@ Gamestate = require "lib.hump.gamestate"
 MainMenu = require "scenes.main_menu"
 
 function love.load()
+    -- disable antialiasing
+    love.graphics.setDefaultFilter("nearest", "nearest")
     -- handle command line args
     debug = false
     for _, a in pairs(arg) do
