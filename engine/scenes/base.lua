@@ -81,6 +81,10 @@ function Level:new(filename, player_x, player_y, width, height)
     collisionHandler = CollisionHandler()
     -- load_colliders(filename)
     self.map = TiledMap(filename)
+    for _, collider in pairs(self.map:getColliders()) do
+        print(collider)
+        collisionHandler:add(collider)
+    end
 
     -- define player & camera, start em both at the same coordinates
     self.player = Player(player_x, player_y)

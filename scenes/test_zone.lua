@@ -7,7 +7,7 @@ local TestZone = Level:extend()
 
 function TestZone:enter()
     -- initialize geometry and player position
-    TestZone.super.new(self, "scenes/test_zone.json", 100, 416)
+    TestZone.super.new(self, "scenes/test_zone.json", 100, 0)
     
     -- show colliders cos we're in the void
     showColliders = true

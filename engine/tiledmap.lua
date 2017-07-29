@@ -1,6 +1,7 @@
 -- parser for tiled output in json format
 local Object = require "lib.classic"
 local json = require "lib.json"
+local colliders = require "engine.colliders"
 
 -- takes b, a relative path in the file given by path a
 -- and adjusts it to be relative to the root of path a
@@ -154,6 +155,28 @@ function TiledMap:draw()
             end
         end
     end
+end
+
+-- returns a table containing each tile as a collider
+-- (each tile that actually has a physical presence anyway)
+function TiledMap:getColliders()
+    local col_table = {}
+    -- in theory only one layer should be collidable anyway?
+    -- so iterating thru em is just a catch-all
+    -- maybe moving platforms would have their own layer but that's still a way off
+    for _, layer in pairs(self.layers) do
+        for idx, gid in pairs(layer.data) do
+            gid = strip_flip(gid)
+            if gid ~= 0 and self.tiles[gid].collisionType == "block" then
+                print("shit")
+                local x = ((idx - 1) % self.width) * self.tileWidth
+                local y = math.floor((idx - 1) / self.width) * self.tileHeight
+                local x2, y2 = x + self.tileWidth, y + self.tileHeight
+                table.insert(col_table, colliders.Collider(x, y, x2, y, x2, y2, x, y2))
+            end
+        end
+    end
+    return col_table
 end
 
 return TiledMap
