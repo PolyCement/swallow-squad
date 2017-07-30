@@ -1,43 +1,12 @@
 local Object = require "lib.classic"
 local vector = require "lib.hump.vector"
 
--- polygonal colliders
--- they're components now btw
-
--- this is an edge
-local Segment = Object:extend()
-
-function Segment:new(a, b)
-    self.a = a
-    self.b = b
-    self.direction = b - a
-    self.normal = self.direction:perpendicular():normalized()
-end
-
--- should probably remove this once im done debugging
-function Segment:__tostring()
-    local a_string = tostring(self.a)
-    local b_string = tostring(self.b)
-    local dir_string = tostring(self.direction)
-    return "Segment(" .. a_string .. ", " .. b_string .. ", " .. dir_string .. ")"
-end
-
--- THIS is the collider
+-- a basic aabb collider, to be used as a component
 local Collider = Object:extend()
 
--- assumes clockwise winding
-function Collider:new(...)
-    -- store coordinates as vertices
-    local args = {...}
-    self.vertices = {}
-    for i = 1, #args, 2 do
-        table.insert(self.vertices, vector(args[i], args[i+1]))
-    end
-    -- create edges
-    self.edges = {}
-    for i = 1, #self.vertices do
-        table.insert(self.edges, Segment(self.vertices[i], self.vertices[1+i%(#self.vertices)]))
-    end
+-- its an aabb again.....
+function Collider:new(x, y, w, h)
+    self.pos, self.width, self.height = vector(x, y), w, h
     -- solidity
     self.solid = true
     -- callback function
@@ -75,35 +44,14 @@ end
 function Collider:drawBoundingBox()
     local r, g, b, a = love.graphics.getColor()
     love.graphics.setColor(255, 0, 0, 255)
-    -- shove all coordinates in a table
-    local vertices = {}
-    for _, v in pairs(self.vertices) do
-        table.insert(vertices, v.x)
-        table.insert(vertices, v.y)
-    end
-    -- we need at least 3 points to draw a polygon
-    if #vertices < 6 then
-        love.graphics.line(unpack(vertices))
-    else
-        love.graphics.polygon("line", unpack(vertices))
-    end
+    love.graphics.rectangle("line", self.pos.x, self.pos.y, self.width, self.height)
     love.graphics.setColor(r, g, b, a)
 end
 
--- move by the requested amount, no collision handling
+-- move by the requested amount
 function Collider:move(delta)
-    -- this is dangerous rn cos it assumes we have 4 vertices
-    -- it's gonna be phased out soon tho so whatever
-    self.lastPos = (self.vertices[3] + self.vertices[4]) / 2
-    for i, v in pairs(self.vertices) do
-        self.vertices[i] = v + delta
-    end
-    -- technically we don't need to update these since the direction is the only
-    -- bit we actually use, and since we don't support rotation direction never changes
-    for i, v in pairs(self.edges) do
-        v.a = v.a + delta
-        v.b = v.b + delta
-    end
+    self.lastPos = self.pos
+    self.pos = self.pos + delta
 end
 
 -- move by the requested amount, correct our position if we hit something
@@ -115,26 +63,6 @@ end
 
 function Collider:isSolid()
     return self.solid
-end
-
--- get one vertex
-function Collider:getVertex(idx)
-    return self.vertices[idx]
-end
-
--- get all the vertices
-function Collider:getVertices()
-    return self.vertices
-end
-
--- calculate the centre of the polygon
-function Collider:getCenter()
-    local num_vertices = #self.vertices
-    local total = self.vertices[1]
-    for i = 2, num_vertices do
-        total = total + self.vertices[i]
-    end
-    return total/num_vertices
 end
 
 function Collider:__tostring()

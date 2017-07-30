@@ -252,11 +252,9 @@ local Player = Object:extend()
 
 -- HMMMM..... THAT'S TASTY GAME DEV............
 function Player:new(x, y)
-    local width = 32
-    local x2 = x + width
-    local y2 = y + 128
+    local w, h = 32, 128
     -- define components
-    self.collider = colliders.Collider(x, y, x2, y, x2, y2, x, y2)
+    self.collider = colliders.Collider(x, y, w, h)
     self.collider:setCallback(function (obj, colliding_side)
         -- note: self is closed in here, it's not a parameter
         self.state:onCollision(obj, colliding_side)
@@ -296,7 +294,7 @@ end
 
 function Player:update(dt)
     self.state:update(dt)
-    self.sprite:setPos(self.collider:getVertex(1):unpack())
+    self.sprite:setPos(self.collider.pos.x, self.collider.pos.y)
 end
 
 function Player:draw()
@@ -354,7 +352,7 @@ end
 
 -- used to tell the camera where to look
 function Player:getPos()
-    return self.collider:getCenter()
+    return self.collider.pos
 end
 
 -- used to keep the player stuck to slopes

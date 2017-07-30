@@ -11,125 +11,14 @@ side = {
     right = -2 
 }
 
--- checks if a and b intersect
--- this could probably be made more efficient by starting with a bounding box check
-local function get_intersect(a, b)
-    local p, q = a[1], b[1]
-    local r, s = a[2] - a[1], b[2] - b[1]
-    local t = (-r.y * (p.x - q.x) + r.x * (p.y - q.y)) / (-s.x * r.y + r.x * s.y)
-    local u = (s.x * (p.y - q.y) - s.y * (p.x - q.x)) / (-s.x * r.y + r.x * s.y)
-
-    if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
-        -- a and b intersect at p + ur
-        return p + u * r
-    end
-    
-    -- a and b do not intersect
-    return nil
-end
-
--- takes an object and an axis to project onto
-local function project(a, axis)
-    -- find the min and max projection values, take those as the ends of our projection
-    local vertices = a:getVertices()
-    local min = vertices[1] * axis
-    local max = min
-    for _, v in pairs(vertices) do
-        local proj = v * axis
-        if proj < min then min = proj end
-        if proj > max then max = proj end
-    end
-    return {min, max}
-end
-
--- checks if a point lies within a given range
-local function contains(n, range)
-    local a, b = range[1], range[2]
-    -- make sure a is smaller than b
-    if range[2] < range[1] then
-        a = b
-        b = range[1]
-    end
-    return n > a and n < b
-end
-
--- check if 2 projections overlap
-local function overlap(a_, b_)
-    if contains(a_[1], b_) or
-       contains(a_[2], b_) or
-       contains(b_[1], a_) or
-       contains(b_[2], a_) then
-        return true
-    end
-    return false
-end
-
--- check for a collision in the given axis
-local function check_collision_in_axis(axis, a, b)
-    local a_, b_ = project(a, axis), project(b, axis)
-    if not overlap(a_, b_) then
-        return nil
-    end
-    -- calculate overlap between projections
-    local depth = math.min(a_[2] - b_[1], b_[2] - a_[1])
-    -- convert axis to push vector
-    return axis:normalized() * depth
-end
-
--- find minimum translation distance
-local function find_mtd(push_vectors)
-    local mtd = push_vectors[1]
-    for _, v in pairs(push_vectors) do
-        if v * v < mtd * mtd then
-            mtd = v
-        end
-    end
-    return mtd
-end
-
--- checks if the given colliders are, uh, colliding
-local function check_collision(a, b)
-    -- track all potential push vectors
-    local push_vectors = {}
-    for _, v in pairs(a.edges) do
-        local push_vector = check_collision_in_axis(v.normal, a, b)
-        if not push_vector then
-            return nil
-        end
-        table.insert(push_vectors, push_vector)
-    end
-    for _, v in pairs(b.edges) do
-        local push_vector = check_collision_in_axis(v.normal, a, b)
-        if not push_vector then
-            return nil
-        end
-        table.insert(push_vectors, push_vector)
-    end
-    local mtd = find_mtd(push_vectors)
-    -- make sure the mtd is pushing a's centre away from b's centre
-    local d = a:getCenter() - b:getCenter()
-    if (d * mtd) < 0 then
-        mtd = -mtd
-    end
-    return mtd
-end
-
--- returns the value of largest magnitude in a table of numbers
-local function largest_magnitude(x)
-    local max = math.max(unpack(x))
-    local min = math.min(unpack(x))
-    if max > math.abs(min) then
-        return max
-    else
-        return min
-    end
-end
-
 -- handles collisions
 local CollisionHandler = Object:extend()
 
-function CollisionHandler:new()
+-- world geometry is required (just a table)
+function CollisionHandler:new(world)
     self.colliders = {}
+    -- stuff to do with the world, maybe world should be its own object....
+    self.world = world
 end
 
 -- add a collider
@@ -177,60 +66,65 @@ function CollisionHandler:resolve()
     end
 end
 
--- check for collisions at the position we end up at with the given delta
--- execute the callback function of any colliding objects
+-- checks for a collision between 2 aabb colliders
+-- ps. this function name sucks
+local function check_aabb_col(a, b)
+    return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
+end
+
+-- so i guess what this should do is:
+-- 1. check for and handle map collisions
+-- 2. check for and handle collisions between game objects (rn thats just player and prey)
+-- then i can use some kind of tile-based indexing so i only have to check a few objects
+--
+-- check for collisions between the given collider and the world
+-- will also handle collisions between colliders and hitting callbacks (eventually)
 -- returns the delta resulting from collisions with the environment
-function CollisionHandler:checkCollision(obj)
-    local num_collisions = 0
-    local all_mtds_x, all_mtds_y = {}, {}
-    for collider, _ in pairs(self.colliders) do
-        -- the side of obj that made contact
-        local colliding_side = nil
-        -- check for a collision at the new position
-        local mtd = check_collision(obj, collider)
-        if mtd then
-            num_collisions = num_collisions + 1
-            -- record the mtd for solid colliders
-            if collider:isSolid(obj) then
-                table.insert(all_mtds_x, mtd.x)
-                table.insert(all_mtds_y, mtd.y)
-            end
-            -- maybe this should be in player
-            -- figure out which axis we're being pushed in hardest
-            if math.abs(mtd.x) > math.abs(mtd.y) then
-                -- if we're being pushed left we hit our right side
-                if mtd.x < 0 then
-                    colliding_side = side.right
-                -- else, we've hit our left side
-                else
-                    colliding_side = side.left
-                end
-            else
-                -- if we're being pushed up we hit our bottom
-                if mtd.y < 0 then
-                    colliding_side = side.bottom
-                -- else, we've hit our top side
-                else
-                    colliding_side = side.top
-                end
-            end
-        end
-        if colliding_side then
-            -- hit that mf callback button
-            obj.onCollision(collider, colliding_side, mtd)
-            collider.onCollision(obj, -colliding_side, mtd)
+function CollisionHandler:checkCollision(collider)
+    -- break down the movement into x and y components
+    local x, y = collider.pos:unpack()
+    local old_x, old_y = collider.lastPos:unpack()
+    local w, h = collider.width, collider.height
+    local tw, th = self.world.tileWidth, self.world.tileHeight
+    -- figure out the x coord of the forward edge
+    local fw_x = x > old_x and x + w or x
+    local tile_x = math.floor(fw_x / self.world.tileWidth)
+    -- what rows are we intersecting?
+    local top_y = math.floor(old_y / self.world.tileHeight)
+    local bottom_y = math.floor((old_y + h)/self.world.tileHeight)
+    -- check those rows
+    local can_move = true
+    for row = top_y, bottom_y do
+        if self.world.world[tile_x][row] then
+            can_move = false
         end
     end
-    -- only apply the biggest mtd in each dimension
-    local correction_vector_x = 0
-    if table.length(all_mtds_x) > 0 then
-        correction_vector_x = largest_magnitude(all_mtds_x)
+    print("x: " .. (can_move and "can move" or "can't move"))
+    local dx = 0
+    if not can_move then
+        dx = x > old_x and tile_x*tw - (x + w) or ((tile_x+1)*tw) - x
     end
-    local correction_vector_y = 0
-    if table.length(all_mtds_y) > 0 then
-        correction_vector_y = largest_magnitude(all_mtds_y)
+    -- figure out the y coord of the forward edge
+    local fw_y = y > old_y and y + h or y
+    local tile_y = math.floor(fw_y / self.world.tileHeight)
+    print(tile_y)
+    -- what rows are we intersecting?
+    local top_x = math.floor(old_x / self.world.tileWidth)
+    local bottom_x = math.floor((old_x + w)/self.world.tileWidth)
+    -- check those columns
+    local can_move = true
+    for col = top_x, bottom_x do
+        if self.world.world[col][tile_y] then
+            can_move = false
+        end
     end
-    return vector(correction_vector_x, correction_vector_y)
+    print("y: " .. (can_move and "can move" or "can't move"))
+    local dy = 0
+    if not can_move then
+        dy = y > old_y and tile_y*th - (y + h) or ((tile_y+1)*th) - y
+    end
+    print(dx, dy)
+    return vector(dx, dy)
 end
 
 return CollisionHandler

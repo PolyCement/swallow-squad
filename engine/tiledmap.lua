@@ -19,12 +19,51 @@ local function adjust_path(a, b)
     return a .. b
 end
 
+local FLIP_H_FLAG = 0x80000000
+local FLIP_V_FLAG = 0x40000000
+local FLIP_D_FLAG = 0x20000000
+-- strip bits used to indicated flippedness from the given gid
+-- todo: replace all these bit calls if löve ever switches to lua 5.3
+local function strip_flip(gid)
+    return bit.band(gid, bit.bnot(bit.bor(FLIP_H_FLAG, FLIP_V_FLAG, FLIP_D_FLAG)))
+end
+
+-- ok world really needs to be an object
+-- only available by calling TiledMap:getWorld()
+-- takes a map and pulls out all the stuff needed for collisions
+-- will definitely end up changing once i add slopes but i need some structure first
+local World = Object:extend()
+
+function World:new(map)
+    self.tileWidth = map.tileWidth
+    self.tileHeight = map.tileHeight
+    self.world = {}
+    for _, layer in pairs(map.layers) do
+        if layer.name == "base" then
+            for idx, gid in pairs(layer.data) do
+                local x = ((idx - 1) % map.width)
+                local y = math.floor((idx - 1) / map.width)
+                if not self.world[x] then
+                    self.world[x] = {}
+                end
+                gid = strip_flip(gid)
+                if gid ~= 0 and map.tiles[gid].collisionType == "block" then
+                    self.world[x][y] = true
+                else
+                    self.world[x][y] = false
+                end
+            end
+        end
+    end
+end
+
 -- maps have layers, like an onion
 local Layer = Object:extend()
 
 function Layer:new(raw)
     self.data = raw.data
     self.visible = raw.visible
+    self.name = raw.name
 end
 
 -- a tile. holds a quad and reference to its parent tileset for drawing
@@ -98,15 +137,6 @@ function TiledMap:new(map_path)
     end
 end
 
-local FLIP_H_FLAG = 0x80000000
-local FLIP_V_FLAG = 0x40000000
-local FLIP_D_FLAG = 0x20000000
--- strip bits used to indicated flippedness from the given gid
--- todo: replace all these bit calls if löve ever switches to lua 5.3
-local function strip_flip(gid)
-    return bit.band(gid, bit.bnot(bit.bor(FLIP_H_FLAG, FLIP_V_FLAG, FLIP_D_FLAG)))
-end
-
 -- flags for checking flippedness: horizontal, vertical, anti-diagonal
 function TiledMap:draw()
     for _, layer in pairs(self.layers) do
@@ -157,26 +187,9 @@ function TiledMap:draw()
     end
 end
 
--- returns a table containing each tile as a collider
--- (each tile that actually has a physical presence anyway)
-function TiledMap:getColliders()
-    local col_table = {}
-    -- in theory only one layer should be collidable anyway?
-    -- so iterating thru em is just a catch-all
-    -- maybe moving platforms would have their own layer but that's still a way off
-    for _, layer in pairs(self.layers) do
-        for idx, gid in pairs(layer.data) do
-            gid = strip_flip(gid)
-            if gid ~= 0 and self.tiles[gid].collisionType == "block" then
-                print("shit")
-                local x = ((idx - 1) % self.width) * self.tileWidth
-                local y = math.floor((idx - 1) / self.width) * self.tileHeight
-                local x2, y2 = x + self.tileWidth, y + self.tileHeight
-                table.insert(col_table, colliders.Collider(x, y, x2, y, x2, y2, x, y2))
-            end
-        end
-    end
-    return col_table
+-- returns a world object containing collision info
+function TiledMap:getWorld()
+    return World(self)
 end
 
 return TiledMap
