@@ -115,6 +115,7 @@ function Level:update(dt)
         for p, _  in pairs(prey) do
             p:update()
         end
+        print("pos: ", self.player:getPos())
     end
 end
 

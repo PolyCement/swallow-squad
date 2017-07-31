@@ -45,21 +45,21 @@ end
 function PlayerState:update(dt)
     -- gravity applies in all states
     self.player.velocity.y = self.player.velocity.y + gravity * dt
-    -- update position
-    local delta = self.player.velocity * dt
-    -- attempt to move
-    local collider = self.player.collider
-    collider:move(delta)
+    self.player.collider:move(self.player.velocity * dt)
 end
 
 function PlayerState:keyPressed(key)
 end
 
+-- a nil obj indicates a world collision
+-- im planning on forcing colliders to carry a reference to their parent
+-- so i guess obj should probably be the collider's parent rather than the collider
+-- that's a fix for later tho
 function PlayerState:onCollision(obj, colliding_side)
-    if obj:getTag() == "prey" then
+    if obj ~= nil and obj:getTag() == "prey" then
         self.player:eat(obj:getParent())
     end
-    if obj:isSolid(self.player.collider) then
+    if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom or colliding_side == side.top then
             self.player.velocity.y = 0
         elseif colliding_side == side.left or colliding_side == side.right then
@@ -101,10 +101,6 @@ function StandingState:update(dt)
         self.player.velocity.x = 0
     end
     StandingState.super.update(self, dt)
-    -- if we're falling (ie. we've left the ground) attempt to snap to it
-    if self.player.velocity.y > 0 then
-        -- self.player:snapToGround()
-    end
     self.player.sprite:update(dt)
 end
 
@@ -142,9 +138,6 @@ function RunningState:update(dt)
         return
     end
     RunningState.super.update(self, dt)
-    if self.player.velocity.y > 0 then
-        -- self.player:snapToGround()
-    end
     self.player.sprite:update(dt * math.abs(self.player.velocity.x) / MAX_SPEED)
 end
 
@@ -206,7 +199,7 @@ end
 
 function JumpingState:onCollision(obj, colliding_side)
     JumpingState.super.onCollision(self, obj, colliding_side)
-    if obj:isSolid(self.player.collider) then
+    if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
         end
@@ -240,7 +233,7 @@ end
 
 function FallingState:onCollision(obj, colliding_side)
     FallingState.super.onCollision(self, obj, colliding_side)
-    if obj:isSolid(self.player.collider) then
+    if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
         end
@@ -262,7 +255,7 @@ function Player:new(x, y)
     self.collider:setTag("player")
     self.collider:setParent(self)
     collisionHandler:add(self.collider)
-    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, width)
+    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, w)
     -- register animations
     for i=1, 5 do
         self.sprite:addAnimation("stand" .. i, 9, i, 1)
@@ -285,19 +278,18 @@ function Player:new(x, y)
     self.jumping = JumpingState(self)
     self.falling = FallingState(self)
     self.state = self.standing
-    -- where was our bottom edge before we moved? (used for one-way platforms)
-    -- todo: figure out if one-way platforms can be made to work without this
-    -- self.prevBottomPos = vector(0, 0)
     -- what's our current animation
     self.currentAnimation = "stand"
 end
 
 function Player:update(dt)
     self.state:update(dt)
-    self.sprite:setPos(self.collider.pos.x, self.collider.pos.y)
 end
 
 function Player:draw()
+    -- the collision handler can move the player so this can't be in update anymore
+    -- i dont think it really belongs here either tho....
+    self.sprite:setPos(self.collider.pos.x, self.collider.pos.y)
     self.sprite:draw()
 end
 
@@ -353,33 +345,6 @@ end
 -- used to tell the camera where to look
 function Player:getPos()
     return self.collider.pos
-end
-
--- used to keep the player stuck to slopes
-function Player:snapToGround()
-    -- cast a tiny ray from our back edge
-    local back_corner = nil
-    if self.velocity.x < 0 then
-        back_corner = self.collider:getVertex(3)
-    else
-        back_corner = self.collider:getVertex(4)
-    end
-    -- 8 is a long beam but needed to handle ~45 degree slopes while empty
-    local ray_end = back_corner + vector(0, 8)
-    local collisions = collisionHandler:raycast(back_corner, ray_end)
-    -- if there's a platform close to the player's feet, pull em down
-    if #collisions > 0 then
-        local segment, intersect = collisions[1][1], collisions[1][2]
-        -- don't do anything if we're not actually going down the slope
-        -- (this fixes issues with the ray catching a slight slope while ascending)
-        if (self.velocity.x < 0) ~= (segment.normal.x < 0) then
-            local delta = vector(0, intersect.y - back_corner.y)
-            self.collider:move(delta)
-            -- rounding means we might not quite touch the slope
-            -- so we gotta reset y velocity to stop us immediately entering the fall state
-            self.velocity.y = 0
-        end
-    end
 end
 
 function Player:__tostring()

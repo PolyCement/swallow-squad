@@ -101,16 +101,19 @@ function CollisionHandler:checkCollision(collider)
     end
     print("x: " .. (can_move and "can move" or "can't move"))
     local dx = 0
+    -- todo: make those 0.0001s into a single constant
     if not can_move then
-        dx = x > old_x and tile_x*tw - (x + w) or ((tile_x+1)*tw) - x
+        dx = x > old_x and tile_x*tw - (x + w + 0.0001) or (tile_x+1)*tw - x + 0.0001
+        collider.onCollision(nil, (x > old_x and side.right or side.left))
     end
+    -- apply dx locally before calculating dy because wall grabs are not intended behaviour
+    x = x + dx
     -- figure out the y coord of the forward edge
     local fw_y = y > old_y and y + h or y
     local tile_y = math.floor(fw_y / self.world.tileHeight)
-    print(tile_y)
     -- what rows are we intersecting?
-    local top_x = math.floor(old_x / self.world.tileWidth)
-    local bottom_x = math.floor((old_x + w)/self.world.tileWidth)
+    local top_x = math.floor(x / self.world.tileWidth)
+    local bottom_x = math.floor((x + w)/self.world.tileWidth)
     -- check those columns
     local can_move = true
     for col = top_x, bottom_x do
@@ -121,9 +124,10 @@ function CollisionHandler:checkCollision(collider)
     print("y: " .. (can_move and "can move" or "can't move"))
     local dy = 0
     if not can_move then
-        dy = y > old_y and tile_y*th - (y + h) or ((tile_y+1)*th) - y
+        dy = y > old_y and tile_y*th - (y + h + 0.0001) or (tile_y+1)*th - y + 0.0001
+        collider.onCollision(nil, (y > old_y and side.bottom or side.top))
     end
-    print(dx, dy)
+    print("delta: ", dx, dy)
     return vector(dx, dy)
 end
 
