@@ -58,10 +58,24 @@ function Collider:isSolid()
     return self.solid
 end
 
+function Collider:getCenter()
+    return vector(self.pos.x + self.width/2, self.pos.y + self.height/2)
+end
+
 function Collider:__tostring()
     return "Collider"
 end
 
+-- a non-solid collider
+-- does this really need a subclass? literally the only difference is solidity
+local Trigger = Collider:extend()
+
+function Trigger:new(...)
+    Trigger.super.new(self, ...)
+    self.solid = false
+end
+
 return {
-    Collider = Collider
+    Collider = Collider,
+    Trigger = Trigger
 }

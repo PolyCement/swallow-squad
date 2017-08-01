@@ -344,7 +344,7 @@ end
 
 -- used to tell the camera where to look
 function Player:getPos()
-    return self.collider.pos
+    return self.collider:getCenter()
 end
 
 function Player:__tostring()

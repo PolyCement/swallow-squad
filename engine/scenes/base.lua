@@ -73,16 +73,26 @@ end
 -- stuff common to all levels will end up here once i figure out what that actually is
 local Level = Object:extend()
 
-function Level:new(filename, player_x, player_y, width, height)
-    -- initialize prey
-    prey = {}
-
-    -- create collision handler and initialise with world geometry
+function Level:new(filename, width, height)
+    -- load the map
     self.map = TiledMap(filename)
+    
+    -- create collision handler and initialise with world geometry
     collisionHandler = CollisionHandler(self.map:getWorld())
 
-    -- define player & camera, start em both at the same coordinates
-    self.player = Player(player_x, player_y)
+    -- spawn any objects the map has requested
+    local objs = self.map:getObjects()
+    prey = {}
+    for _, obj in pairs(objs) do
+        if obj.type == "player" then
+            player_x = obj.x
+            self.player = Player(obj.x, obj.y)
+        elseif obj.type == "prey" then
+            local species = survivors.get_random_species()
+            prey[species:newPrey(obj.x, obj.y)] = true
+        end
+    end
+    local player_x, player_y = self.player:getPos():unpack()
     self.camera = Camera(player_x, player_y)
 
     -- make prey face the player
@@ -94,6 +104,7 @@ function Level:new(filename, player_x, player_y, width, height)
     self.hud = Hud(table.length(prey))
 
     -- level width and height (for restricting camera)
+    -- todo: pull these from tiledmap
     self.width = width
     self.height = height
 

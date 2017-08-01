@@ -125,16 +125,15 @@ function Prey:new(species, x, y)
     self.species = species
     -- define the sprite, then use its dimensions to determine collider size
     self.sprite = sprite.Sprite(self.species:getImagePath(), x, y, 1, 1)
-    local x2 = x + self.sprite:getWidth() - 2
-    local y2 = y + self.sprite:getHeight() - 2
-    self.collider = colliders.Trigger(x, y, x2, y, x2, y2, x, y2)
+    local w, h = self.sprite:getWidth() - 2, self.sprite:getHeight() - 2
+    self.collider = colliders.Trigger(x, y, w, h)
     self.collider:setTag("prey")
     self.collider:setParent(self)
     collisionHandler:add(self.collider)
     -- define look trigger
-    local lx, ly = (x + x2) / 2 - 256, (y + y2) / 2 - 256
-    local lx2, ly2 = lx + 512, ly + 512
-    self.lookTrigger = colliders.Trigger(lx, ly, lx2, ly, lx2, ly2, lx, ly2)
+    local look_r = 256
+    local look_x, look_y = x + (w / 2) - look_r, y + (h / 2) - look_r
+    self.lookTrigger = colliders.Trigger(look_x, look_y, look_r*2, look_r*2)
     self.lookTrigger:setCallback(function (obj)
         if obj:getTag() == "player" then
             self:lookAt(obj:getParent():getPos().x)
@@ -143,7 +142,7 @@ function Prey:new(species, x, y)
     end)
     collisionHandler:add(self.lookTrigger)
     -- stuff for shouting at the player
-    self.speechBubble = SpeechBubble(x2, y)
+    self.speechBubble = SpeechBubble(x+w, y)
     self.playerClose = false
     self.shouting = false
     -- are we looking left?

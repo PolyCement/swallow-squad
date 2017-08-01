@@ -38,21 +38,17 @@ function World:new(map)
     self.tileWidth = map.tileWidth
     self.tileHeight = map.tileHeight
     self.world = {}
-    for _, layer in pairs(map.layers) do
-        if layer.name == "base" then
-            for idx, gid in pairs(layer.data) do
-                local x = ((idx - 1) % map.width)
-                local y = math.floor((idx - 1) / map.width)
-                if not self.world[x] then
-                    self.world[x] = {}
-                end
-                gid = strip_flip(gid)
-                if gid ~= 0 and map.tiles[gid].collisionType == "block" then
-                    self.world[x][y] = true
-                else
-                    self.world[x][y] = false
-                end
-            end
+    for idx, gid in pairs(map.layers.world.data) do
+        local x = ((idx - 1) % map.width)
+        local y = math.floor((idx - 1) / map.width)
+        if not self.world[x] then
+            self.world[x] = {}
+        end
+        gid = strip_flip(gid)
+        if gid ~= 0 and map.tiles[gid].collisionType == "block" then
+            self.world[x][y] = true
+        else
+            self.world[x][y] = false
         end
     end
 end
@@ -106,6 +102,7 @@ function Tileset:new(tileset_path)
 end
 
 -- here is the map, where do u wish to go
+-- the physical tile layer should be named "world"
 local TiledMap = Object:extend()
 
 function TiledMap:new(map_path)
@@ -118,9 +115,18 @@ function TiledMap:new(map_path)
     self.tileHeight = raw.tileheight
 
     -- load layers
+    -- maybe objects should be kept in layers? i'll figure it out later
     self.layers = {}
+    self.objects = {}
     for _, raw_layer in pairs(raw.layers) do
-        table.insert(self.layers, Layer(raw_layer))
+        local layer_type = raw_layer.type
+        if layer_type == "tilelayer" then
+            self.layers[raw_layer.name] = Layer(raw_layer)
+        elseif layer_type == "objectgroup" then
+            for _, obj in pairs(raw_layer.objects) do
+                table.insert(self.objects, obj)
+            end
+        end
     end
 
     -- load tilesets
@@ -143,7 +149,7 @@ function TiledMap:draw()
         for idx, gid in pairs(layer.data) do
             -- skip blanks
             if gid ~= 0 then
-                -- handle flips
+                -- check for flip bits, then strip em
                 local flipped_h = bit.band(gid, FLIP_H_FLAG) ~= 0
                 local flipped_v = bit.band(gid, FLIP_V_FLAG) ~= 0
                 local flipped_d = bit.band(gid, FLIP_D_FLAG) ~= 0
@@ -190,6 +196,11 @@ end
 -- returns a world object containing collision info
 function TiledMap:getWorld()
     return World(self)
+end
+
+-- returns a table of all objects
+function TiledMap:getObjects()
+    return self.objects
 end
 
 return TiledMap
