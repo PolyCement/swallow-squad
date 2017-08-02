@@ -38,23 +38,6 @@ function CollisionHandler:draw()
     end
 end
 
--- cast a ray and see what it hits
-function CollisionHandler:raycast(ray_start, ray_end)
-    -- check all segments of all shapes for an intersect
-    local collisions = {}
-    local a = {ray_start, ray_end}
-    for collider, _ in pairs(self.colliders) do
-        for _, e in pairs(collider.edges) do
-            local b = {e.a, e.b}
-            local intersect = get_intersect(a, b)
-            if intersect then
-                table.insert(collisions, {e, intersect})
-            end
-        end
-    end
-    return collisions
-end
-
 -- check for collisions and resolve em
 function CollisionHandler:resolve()
     -- only check objects that can move: right now, that's the player
@@ -69,7 +52,11 @@ end
 -- checks for a collision between 2 aabb colliders
 -- ps. this function name sucks
 local function check_aabb_col(a, b)
-    return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
+    local a_x, a_y = a.pos:unpack()
+    local a_w, a_h = a.width, a.height
+    local b_x, b_y = b.pos:unpack()
+    local b_w, b_h = b.width, b.height
+    return a_x < b_x + b_w and a_x + a_w > b_x and a_y < b_y + b_h and a_y + a_h > b_y
 end
 
 -- so i guess what this should do is:
@@ -128,6 +115,15 @@ function CollisionHandler:checkCollision(collider)
         collider.onCollision(nil, (y > old_y and side.bottom or side.top))
     end
     print("delta: ", dx, dy)
+    -- simple check for aabb collisions - doesn't handle any kind of blocking behaviour
+    for other_collider, _ in pairs(self.colliders) do
+        if other_collider ~= collider then
+            if check_aabb_col(collider, other_collider) then
+                collider.onCollision(other_collider)
+                other_collider.onCollision(collider)
+            end
+        end
+    end
     return vector(dx, dy)
 end
 
