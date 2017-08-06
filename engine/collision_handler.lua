@@ -43,15 +43,15 @@ function CollisionHandler:resolve()
     -- only check objects that can move: right now, that's the player
     for collider, _ in pairs(self.colliders) do
         if collider:getTag() == "player" then
-            local delta = self:checkCollision(collider)
+            local delta = self:checkWorldCollision(collider)
             collider:move(delta)
+            self:checkObjectCollision(collider)
         end
     end
 end
 
 -- checks for a collision between 2 aabb colliders
--- ps. this function name sucks
-local function check_aabb_col(a, b)
+local function intersect(a, b)
     local a_x, a_y = a.pos:unpack()
     local a_w, a_h = a.width, a.height
     local b_x, b_y = b.pos:unpack()
@@ -59,15 +59,23 @@ local function check_aabb_col(a, b)
     return a_x < b_x + b_w and a_x + a_w > b_x and a_y < b_y + b_h and a_y + a_h > b_y
 end
 
--- so i guess what this should do is:
--- 1. check for and handle map collisions
--- 2. check for and handle collisions between game objects (rn thats just player and prey)
--- then i can use some kind of tile-based indexing so i only have to check a few objects
---
--- check for collisions between the given collider and the world
--- will also handle collisions between colliders and hitting callbacks (eventually)
+function CollisionHandler:checkObjectCollision(collider)
+    -- simple check for aabb collisions - doesn't handle any kind of blocking behaviour
+    for other_collider, _ in pairs(self.colliders) do
+        if other_collider ~= collider then
+            if intersect(collider, other_collider) then
+                collider.onCollision(other_collider)
+                other_collider.onCollision(collider)
+            end
+        end
+    end
+end
+
+-- checks for collisions between the given collider and the world
+-- hits a callback if a collision is detected
 -- returns the delta resulting from collisions with the environment
-function CollisionHandler:checkCollision(collider)
+local NUDGE = 0.0001
+function CollisionHandler:checkWorldCollision(collider)
     -- break down the movement into x and y components
     local x, y = collider.pos:unpack()
     local old_x, old_y = collider.lastPos:unpack()
@@ -80,6 +88,8 @@ function CollisionHandler:checkCollision(collider)
     local top_y = math.floor(old_y / self.world.tileHeight)
     local bottom_y = math.floor((old_y + h)/self.world.tileHeight)
     -- check those rows
+    -- if any of the tiles we hit are slopes we need to handle stuff differently
+    -- ramp checks are only relevant to the lowest tile... handle it separately?
     local can_move = true
     for row = top_y, bottom_y do
         if self.world.world[tile_x][row] then
@@ -88,9 +98,8 @@ function CollisionHandler:checkCollision(collider)
     end
     print("x: " .. (can_move and "can move" or "can't move"))
     local dx = 0
-    -- todo: make those 0.0001s into a single constant
     if not can_move then
-        dx = x > old_x and tile_x*tw - (x + w + 0.0001) or (tile_x+1)*tw - x + 0.0001
+        dx = x > old_x and tile_x*tw - (x + w + NUDGE) or (tile_x+1)*tw - x + NUDGE
         collider.onCollision(nil, (x > old_x and side.right or side.left))
     end
     -- apply dx locally before calculating dy because wall grabs are not intended behaviour
@@ -111,19 +120,10 @@ function CollisionHandler:checkCollision(collider)
     print("y: " .. (can_move and "can move" or "can't move"))
     local dy = 0
     if not can_move then
-        dy = y > old_y and tile_y*th - (y + h + 0.0001) or (tile_y+1)*th - y + 0.0001
+        dy = y > old_y and tile_y*th - (y + h + NUDGE) or (tile_y+1)*th - y + NUDGE
         collider.onCollision(nil, (y > old_y and side.bottom or side.top))
     end
     print("delta: ", dx, dy)
-    -- simple check for aabb collisions - doesn't handle any kind of blocking behaviour
-    for other_collider, _ in pairs(self.colliders) do
-        if other_collider ~= collider then
-            if check_aabb_col(collider, other_collider) then
-                collider.onCollision(other_collider)
-                other_collider.onCollision(collider)
-            end
-        end
-    end
     return vector(dx, dy)
 end
 
