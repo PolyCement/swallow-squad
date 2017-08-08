@@ -54,6 +54,18 @@ function Collider:move(delta)
     self.pos = self.pos + delta
 end
 
+-- move in a specific axis
+-- used by the collision handler to step movement in one axis at a time
+function Collider:moveX(dx)
+    self.lastPos.x = self.pos.x
+    self.pos.x = self.pos.x + dx
+end
+
+function Collider:moveY(dy)
+    self.lastPos.y = self.pos.y
+    self.pos.y = self.pos.y + dy
+end
+
 function Collider:isSolid()
     return self.solid
 end

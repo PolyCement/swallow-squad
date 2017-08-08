@@ -30,13 +30,19 @@ end
 -- ok world really needs to be an object
 -- only available by calling TiledMap:getWorld()
 -- takes a map and pulls out all the stuff needed for collisions
--- will definitely end up changing once i add slopes but i need some structure first
 -- NOTE: does NOT handle transforms - it's more trouble than its worth
+-- todo: really not happy about collision and image tiles being the same
+-- there's gotta be a way to separate em when loading the map
 local World = Object:extend()
 
 function World:new(map)
     self.tileWidth = map.tileWidth
     self.tileHeight = map.tileHeight
+    -- self.world is map.layers.world with tiles subbed in directly
+    -- (we can't do this for drawing cos of flips)
+    -- ideally these would be some kind of collision-specific tile rather than
+    -- the all-purpose ones we have now - world really shouldn't know about image stuff
+    -- not to mention how this gives collisionhandler indirect access to tilesets.......
     self.world = {}
     for idx, gid in pairs(map.layers.world.data) do
         local x = ((idx - 1) % map.width)
@@ -44,11 +50,7 @@ function World:new(map)
         if not self.world[x] then
             self.world[x] = {}
         end
-        if gid ~= 0 and map.tiles[gid].collisionType == "block" then
-            self.world[x][y] = true
-        else
-            self.world[x][y] = false
-        end
+        self.world[x][y] = map.tiles[gid]
     end
 end
 
@@ -70,7 +72,7 @@ function Tile:new(quad, tileset, raw, props)
     self.tileset = tileset
     self.collisionType = raw and raw.type or nil
     if self.collisionType == "ramp" then
-        self.height = {left = props.height_left or 0, right = props.height_right or 0}
+        self.y = {left = props.y_left or 0, right = props.y_right or 0}
     end
 end
 

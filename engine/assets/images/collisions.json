@@ -11,59 +11,59 @@
     {
      "1":
         {
-         "y_left":15,
+         "y_left":16,
          "y_right":12
         },
      "10":
         {
          "y_left":12,
-         "y_right":15
+         "y_right":16
         },
      "11":
         {
-         "y_right":7
+         "y_right":8
         },
      "12":
         {
          "y_left":8,
-         "y_right":15
+         "y_right":16
         },
      "2":
         {
-         "y_left":11,
+         "y_left":12,
          "y_right":8
         },
      "3":
         {
-         "y_left":7,
+         "y_left":8,
          "y_right":4
         },
      "4":
         {
-         "y_left":3
+         "y_left":4
         },
      "5":
         {
-         "y_left":15,
+         "y_left":16,
          "y_right":8
         },
      "6":
         {
-         "y_left":7
+         "y_left":8
         },
      "7":
         {
-         "y_right":3
+         "y_right":4
         },
      "8":
         {
          "y_left":4,
-         "y_right":7
+         "y_right":8
         },
      "9":
         {
          "y_left":8,
-         "y_right":11
+         "y_right":12
         }
     },
  "tilepropertytypes":
