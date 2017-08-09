@@ -134,7 +134,7 @@ function Prey:new(species, x, y)
     local look_r = 256
     local look_x, look_y = x + (w / 2) - look_r, y + (h / 2) - look_r
     self.lookTrigger = colliders.Trigger(look_x, look_y, look_r*2, look_r*2)
-    self.lookTrigger:setCallback(function (obj)
+    self.lookTrigger:setCallback(function (colliding_side, obj)
         if obj:getTag() == "player" then
             self:lookAt(obj:getParent():getPos().x)
             self.playerClose = true

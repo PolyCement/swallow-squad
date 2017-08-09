@@ -44,7 +44,10 @@ end
 
 function PlayerState:update(dt)
     -- gravity applies in all states
-    self.player.velocity.y = self.player.velocity.y + gravity * dt
+    -- uhh fuck u past me it should only apply if we're not grounded
+    if not self.player.grounded then
+        self.player.velocity.y = self.player.velocity.y + gravity * dt
+    end
     self.player.collider:move(self.player.velocity * dt)
 end
 
@@ -55,13 +58,16 @@ end
 -- im planning on forcing colliders to carry a reference to their parent
 -- so i guess obj should probably be the collider's parent rather than the collider
 -- that's a fix for later tho
-function PlayerState:onCollision(obj, colliding_side)
+function PlayerState:onCollision(colliding_side, obj)
     if obj ~= nil and obj:getTag() == "prey" then
         self.player:eat(obj:getParent())
     end
     if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom or colliding_side == side.top then
             self.player.velocity.y = 0
+            if colliding_side == side.bottom then
+                self.player.grounded = true
+            end
         elseif colliding_side == side.left or colliding_side == side.right then
             self.player.velocity.x = 0
         end
@@ -160,6 +166,7 @@ function JumpingState:enter()
     self.player.jumpsLeft = self.player.jumpsLeft - 1
     self.timeJumping = 0
     self.jumpEnded = false
+    self.player.grounded = false
     -- initialise y velocity so air jumps don't immediately switch to falling
     self.player.velocity.y = -self.jumpSpeed
     self.player:setAnimation("jump")
@@ -197,8 +204,8 @@ function JumpingState:keyPressed(key)
     end
 end
 
-function JumpingState:onCollision(obj, colliding_side)
-    JumpingState.super.onCollision(self, obj, colliding_side)
+function JumpingState:onCollision(colliding_side, obj)
+    JumpingState.super.onCollision(self, colliding_side, obj)
     if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
@@ -231,8 +238,8 @@ function FallingState:keyPressed(key)
     end
 end
 
-function FallingState:onCollision(obj, colliding_side)
-    FallingState.super.onCollision(self, obj, colliding_side)
+function FallingState:onCollision(colliding_side, obj)
+    FallingState.super.onCollision(self, colliding_side, obj)
     if obj == nil or obj:isSolid() then
         if colliding_side == side.bottom then
             self.player:setState(self.player.standing)
@@ -248,9 +255,9 @@ function Player:new(x, y)
     local w, h = 32, 128
     -- define components
     self.collider = colliders.Collider(x, y, w, h)
-    self.collider:setCallback(function (obj, colliding_side)
+    self.collider:setCallback(function (colliding_side, obj)
         -- note: self is closed in here, it's not a parameter
-        self.state:onCollision(obj, colliding_side)
+        self.state:onCollision(colliding_side, obj)
     end)
     self.collider:setTag("player")
     self.collider:setParent(self)
@@ -280,6 +287,8 @@ function Player:new(x, y)
     self.state = self.standing
     -- what's our current animation
     self.currentAnimation = "stand"
+    -- are we on the ground?
+    self.grounded = false
 end
 
 function Player:update(dt)
