@@ -43,8 +43,9 @@ function PlayerState:enter()
 end
 
 function PlayerState:update(dt)
-    -- gravity applies in all states
-    -- uhh fuck u past me it should only apply if we're not grounded
+    -- gravity only applies if we're airborne
+    -- might make sense to implement some kind of hierarchy to these states
+    -- then this could go in AirborneState or whatever
     if not self.player.grounded then
         self.player.velocity.y = self.player.velocity.y + gravity * dt
     end
@@ -63,12 +64,12 @@ function PlayerState:onCollision(colliding_side, obj)
         self.player:eat(obj:getParent())
     end
     if obj == nil or obj:isSolid() then
-        if colliding_side == side.bottom or colliding_side == side.top then
+        if colliding_side == "bottom" or colliding_side == "top" then
             self.player.velocity.y = 0
-            if colliding_side == side.bottom then
+            if colliding_side == "bottom" then
                 self.player.grounded = true
             end
-        elseif colliding_side == side.left or colliding_side == side.right then
+        elseif colliding_side == "left" or colliding_side == "right" then
             self.player.velocity.x = 0
         end
     end
@@ -88,7 +89,7 @@ end
 
 function StandingState:update(dt)
     -- state transitions
-    if self.player.velocity.y > 0 then
+    if not collisionHandler:onGround(self.player.collider) then
         self.player:setState(self.player.falling)
         self.player.state:update(dt)
         return
@@ -124,7 +125,7 @@ function RunningState:enter()
 end
 
 function RunningState:update(dt)
-    if self.player.velocity.y > 0 then
+    if not collisionHandler:onGround(self.player.collider) then
         self.player:setState(self.player.falling)
         self.player.state:update(dt)
         return
@@ -207,7 +208,7 @@ end
 function JumpingState:onCollision(colliding_side, obj)
     JumpingState.super.onCollision(self, colliding_side, obj)
     if obj == nil or obj:isSolid() then
-        if colliding_side == side.bottom then
+        if colliding_side == "bottom" then
             self.player:setState(self.player.standing)
         end
     end
@@ -217,6 +218,7 @@ local FallingState = PlayerState:extend()
 
 function FallingState:enter()
     self.player:setAnimation("fall")
+    self.player.grounded = false
 end
 
 function FallingState:update(dt)
@@ -241,7 +243,7 @@ end
 function FallingState:onCollision(colliding_side, obj)
     FallingState.super.onCollision(self, colliding_side, obj)
     if obj == nil or obj:isSolid() then
-        if colliding_side == side.bottom then
+        if colliding_side == "bottom" then
             self.player:setState(self.player.standing)
         end
     end

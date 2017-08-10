@@ -54,6 +54,11 @@ function World:new(map)
     end
 end
 
+-- return the tile at the given coordinates
+function World:getTile(x, y)
+    return self.world[x][y]
+end
+
 -- maps have layers, like an onion
 local Layer = Object:extend()
 

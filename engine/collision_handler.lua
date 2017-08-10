@@ -1,21 +1,13 @@
 local Object = require "lib.classic"
 local vector = require "lib.hump.vector"
 
--- todo: figure out where to put this, it's only used here and in player
--- update: pretty sure we can just make this a string cos i don't use the numbers for anythin
--- "enum" for side which collision occurs on
--- negate to get the opposite side
-side = {
-    top = 1,
-    bottom = -1,
-    left = 2,
-    right = -2 
-}
+-- distance to put between a collider and something it bumped into
+local NUDGE = 0.0001
 
 -- handles collisions
 local CollisionHandler = Object:extend()
 
--- world geometry is required (just a table)
+-- takes the "world" returned by tiledmap
 function CollisionHandler:new(world)
     self.colliders = {}
     self.world = world
@@ -36,6 +28,24 @@ function CollisionHandler:draw()
     for c, _ in pairs(self.colliders) do
         c:drawBoundingBox()
     end
+end
+
+-- check if the given collider is touching the floor
+function CollisionHandler:onGround(collider)
+    local x, y = collider.pos:unpack()
+    local w, h = collider.width, collider.height
+    local tw, th = self.world.tileWidth, self.world.tileHeight
+    local left_col, right_col = math.floor(x / tw), math.floor((x + w) / tw)
+    local bottom_row = math.floor((y + h + NUDGE) / th)
+    -- if we're NUDGE away from a landable surface, we're grounded (i think?)
+    -- don't worry about ramps for now - in theory it shouldn't be possible to walk off em
+    for col = left_col, right_col do
+        local current_tile = self.world:getTile(col, bottom_row)
+        if current_tile then
+            return true
+        end
+    end
+    return false
 end
 
 -- checks for a collision between 2 aabb colliders
@@ -59,7 +69,6 @@ local function check_object_collision(self, collider)
     end
 end
 
-local NUDGE = 0.0001
 local function check_world_collision_x(self, collider)
     local x, old_y = collider.pos.x, collider.lastPos.y
     local moving_right = x > collider.lastPos.x
@@ -75,23 +84,23 @@ local function check_world_collision_x(self, collider)
     local can_move = true
     -- if our midpoint is in a ramp, ignore the bottom row altogether
     local midpoint_col = math.floor((x + w / 2) / tw)
-    local midpoint_tile = self.world.world[midpoint_col][bottom_y]
+    local midpoint_tile = self.world:getTile(midpoint_col, bottom_y)
     if (midpoint_tile and midpoint_tile.collisionType == "ramp") then
         bottom_y = bottom_y - 1
         -- if we're trying to move into a ramp tile on the row above,
         -- and it's connected to a ramp on the row we're on, allow movement
         -- i feel like this can be simplified (i KNOW this can be simplified)
-        local bottom_tile = self.world.world[tile_x][bottom_y]
+        local bottom_tile = self.world:getTile(tile_x, bottom_y)
         if bottom_tile and bottom_tile.collisionType == "ramp" then
             if moving_right then
-                local connected_tile = self.world.world[tile_x-1][bottom_y+1]
+                local connected_tile = self.world:getTile(tile_x-1, bottom_y+1)
                 if connected_tile and connected_tile.collisionType == "ramp" then
                     if connected_tile.y.right == 0 and bottom_tile.y.left == 16 then
                         bottom_y = bottom_y - 1
                     end
                 end
             else
-                local connected_tile = self.world.world[tile_x+1][bottom_y+1]
+                local connected_tile = self.world:getTile(tile_x+1, bottom_y+1)
                 if connected_tile and connected_tile.collisionType == "ramp" then
                     if connected_tile.y.left == 0 and bottom_tile.y.right == 16 then
                         bottom_y = bottom_y - 1
@@ -101,7 +110,7 @@ local function check_world_collision_x(self, collider)
         end
     else
         -- if the bottom tile is a ramp and the high edge is closest, block
-        local bottom_tile = self.world.world[tile_x][bottom_y] 
+        local bottom_tile = self.world:getTile(tile_x, bottom_y) 
         if bottom_tile and bottom_tile.collisionType == "ramp" then
             -- remember that y increases as we descend... this stuff gets confusing
             local y_left, y_right = bottom_tile.y.left, bottom_tile.y.right
@@ -116,7 +125,7 @@ local function check_world_collision_x(self, collider)
     end
     -- now check whatever's left
     for row = top_y, bottom_y do
-        if self.world.world[tile_x][row] then
+        if self.world:getTile(tile_x, row) then
             can_move = false
         end
     end
@@ -124,7 +133,7 @@ local function check_world_collision_x(self, collider)
     local dx = 0
     if not can_move then
         dx = moving_right and tile_x*tw - (x + w + NUDGE) or (tile_x+1)*tw - x + NUDGE
-        collider.onCollision(moving_right and side.right or side.left)
+        collider.onCollision(moving_right and "right" or "left")
     end
     return dx
 end
@@ -145,7 +154,7 @@ local function check_world_collision_y(self, collider)
     local right_x = math.floor((x + w) / tw)
     -- if we're in a ramp, don't check columns past the high end of the ramp
     -- (we also know the middle tile ain't a block, so skip that too)
-    local mid_tile = self.world.world[midpoint_col][tile_y]
+    local mid_tile = self.world:getTile(midpoint_col, tile_y)
     if mid_tile and mid_tile.collisionType == "ramp" then
         if mid_tile.y.left > mid_tile.y.right then
             right_x = midpoint_col - 1
@@ -156,7 +165,7 @@ local function check_world_collision_y(self, collider)
     -- check the columns we care about
     local can_move = true
     for col = left_x, right_x do
-        local current_tile = self.world.world[col][tile_y]
+        local current_tile = self.world:getTile(col, tile_y)
         if current_tile and current_tile.collisionType == "block" then
             can_move = false
         end
@@ -180,7 +189,7 @@ local function check_world_collision_y(self, collider)
         else
             dy = (tile_y + 1) * th - fw_y + NUDGE
         end
-        collider.onCollision(moving_down and side.bottom or side.top)
+        collider.onCollision(moving_down and "bottom" or "top")
     end
     return dy
 end
