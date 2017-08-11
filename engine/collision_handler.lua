@@ -85,11 +85,14 @@ local function check_world_collision_x(self, collider)
     -- if our midpoint is in a ramp, ignore the bottom row altogether
     local midpoint_col = math.floor((x + w / 2) / tw)
     local midpoint_tile = self.world:getTile(midpoint_col, bottom_y)
-    if (midpoint_tile and midpoint_tile.collisionType == "ramp") then
+    if midpoint_tile and midpoint_tile.collisionType == "ramp" then
         bottom_y = bottom_y - 1
         -- if we're trying to move into a ramp tile on the row above,
         -- and it's connected to a ramp on the row we're on, allow movement
         -- i feel like this can be simplified (i KNOW this can be simplified)
+        -- todo: move this outside the if it's in rn
+        -- if we head up a steep slope with enough speed we can end up with the midpoint
+        -- behind the ramp tile we're trying to move into....
         local bottom_tile = self.world:getTile(tile_x, bottom_y)
         if bottom_tile and bottom_tile.collisionType == "ramp" then
             if moving_right then
@@ -170,15 +173,43 @@ local function check_world_collision_y(self, collider)
             can_move = false
         end
     end
-    -- if we're in a ramp, figure out if we need to be moved
-    -- this is probably where code for locking us to the ramp while descending should be, too
+    -- welcome to the mf ramp zone
     local ramp_y = 0
-    if can_move and mid_tile and mid_tile.collisionType == "ramp" then
-        local t = x % tw / tw
-        local r_y = math.floor((1 - t) * mid_tile.y.left + t * mid_tile.y.right)
-        if (y % th) > r_y then
-            ramp_y = r_y
-            can_move = false
+    if can_move then
+        -- if the midpoint is in a ramp, figure out if we need to be moved
+        if mid_tile and mid_tile.collisionType == "ramp" then
+            local t = x % tw / tw
+            local r_y = math.floor((1 - t) * mid_tile.y.left + t * mid_tile.y.right)
+            -- if we're under the ramp, push us up
+            local rel_y = (fw_y % th)
+            if rel_y > r_y then
+                ramp_y = r_y
+                can_move = false
+            -- if we're above, but grounded and ~ 1 + NUDGE away, snap us down
+            else
+                local dist = r_y - rel_y
+                if collider:getParent().grounded and dist > 1 then
+                    return dist - NUDGE
+                end
+            end
+        -- if it's not, check if we need snapped down
+        else
+            local sub_mid_tile = self.world:getTile(midpoint_col, tile_y + 1)
+            if collider:getParent().grounded and sub_mid_tile then
+                -- if the midpoint isn't in a ramp, but would be on the row below, snap
+                local dist
+                if sub_mid_tile.collisionType == "ramp" then
+                    local t = x % tw / tw
+                    local r_y = math.floor((1 - t) * sub_mid_tile.y.left + t * sub_mid_tile.y.right)
+                    dist = ((tile_y + 1) * th + r_y) - fw_y
+                -- if the tile below is a block, snap
+                else
+                    dist = ((tile_y + 1) * th) - fw_y
+                end
+                if dist > 1 then
+                    return dist - NUDGE
+                end
+            end
         end
     end
     print("y: " .. (can_move and "can move" or "can't move"))

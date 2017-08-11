@@ -56,9 +56,7 @@ function PlayerState:keyPressed(key)
 end
 
 -- a nil obj indicates a world collision
--- im planning on forcing colliders to carry a reference to their parent
--- so i guess obj should probably be the collider's parent rather than the collider
--- that's a fix for later tho
+-- todo: change "obj" to "collider" or somethin, it's always a collider
 function PlayerState:onCollision(colliding_side, obj)
     if obj ~= nil and obj:getTag() == "prey" then
         self.player:eat(obj:getParent())
@@ -89,7 +87,7 @@ end
 
 function StandingState:update(dt)
     -- state transitions
-    if not collisionHandler:onGround(self.player.collider) then
+    if not self.player.collider:onGround(self.player.collider) then
         self.player:setState(self.player.falling)
         self.player.state:update(dt)
         return
@@ -125,7 +123,7 @@ function RunningState:enter()
 end
 
 function RunningState:update(dt)
-    if not collisionHandler:onGround(self.player.collider) then
+    if not self.player.collider:onGround(self.player.collider) then
         self.player:setState(self.player.falling)
         self.player.state:update(dt)
         return
@@ -256,14 +254,12 @@ local Player = Object:extend()
 function Player:new(x, y)
     local w, h = 32, 128
     -- define components
-    self.collider = colliders.Collider(x, y, w, h)
+    self.collider = colliders.Collider(self, x, y, w, h)
     self.collider:setCallback(function (colliding_side, obj)
         -- note: self is closed in here, it's not a parameter
         self.state:onCollision(colliding_side, obj)
     end)
     self.collider:setTag("player")
-    self.collider:setParent(self)
-    collisionHandler:add(self.collider)
     self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, w)
     -- register animations
     for i=1, 5 do

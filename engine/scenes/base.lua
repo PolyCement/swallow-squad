@@ -4,47 +4,9 @@ local Hud = require "engine.hud"
 -- ideally this would be imported as prey but prey is a global var already cos im bad at this
 local survivors = require "actors.prey"
 local CollisionHandler = require "engine.collision_handler"
-local colliders = require "engine.colliders"
 local Pause = require "scenes.pause"
 local Player = require "actors.player"
 local TiledMap = require "engine.tiledmap"
-
--- loads colliders defined by the given file into the collision handler
-local function load_colliders(filename)
-    -- open the file
-    local f = io.open(filename, "r")
-    for line in f:lines() do
-        -- treat lines starting with # as a comment (ie. skip it)
-        if not string.starts(line, "#") then
-            -- read the fields to a table
-            local fields = string.split(line)
-            -- the first field determines the collider type
-            if fields[1] == "c" then
-                -- standard collider
-                for idx = 2, #fields do
-                    fields[idx] = tonumber(fields[idx])
-                end
-                collisionHandler:add(colliders.Collider(unpack(fields, 2)))
-            elseif fields[1] == "p" then
-                -- standard collider
-                for idx = 2, #fields do
-                    fields[idx] = tonumber(fields[idx])
-                end
-                -- one-way platform
-                collisionHandler:add(colliders.Platform(unpack(fields, 2)))
-            elseif fields[1] == "s" then
-                -- prey (s for survivor, since p is in use)
-                local species = survivors.get_random_species()
-                prey[species:newPrey(tonumber(fields[2]), tonumber(fields[3]))] = true
-            elseif fields[1] == "t" then
-                -- taur
-                local taur = survivors.species.taur
-                prey[taur:newPrey(tonumber(fields[2]), tonumber(fields[3]))] = true
-            end
-        end
-    end
-    f:close()
-end
 
 -- restrain the camera to stay between (0, 0) and (width, height)
 -- don't bind on nil dimensions

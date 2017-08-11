@@ -1,27 +1,35 @@
 local Object = require "lib.classic"
 local vector = require "lib.hump.vector"
 
--- a basic aabb collider, to be used as a component
+-- a basic aabb collider
 local Collider = Object:extend()
 
--- its an aabb again.....
-function Collider:new(x, y, w, h)
+function Collider:new(parent, x, y, w, h)
     self.pos, self.width, self.height = vector(x, y), w, h
-    -- solidity
     self.solid = true
     -- callback function
     self.onCollision = function() end
     -- tag (so other colliders know what hit em)
     self.tag = ""
-    -- parent, for when a collider's parents need to know about each other in order to react properly
-    -- (only useful for a handful of colliders, so it's optional)
-    self.parent = nil
-    -- Previous position (needed for collision resolution)
+    -- the object this component belongs to
+    self.parent = parent
+    -- previous position, for collision resolution
     self.lastPos = vector(0, 0)
+    -- register with collision handler
+    collisionHandler:add(self)
+end
+
+-- delete yourself!
+function Collider:remove()
+    collisionHandler:remove(self)
 end
 
 function Collider:setCallback(func)
     self.onCollision = func
+end
+
+function Collider:onGround()
+    return collisionHandler:onGround(self)
 end
 
 function Collider:getTag()
@@ -34,10 +42,6 @@ end
 
 function Collider:getParent()
     return self.parent
-end
-
-function Collider:setParent(parent)
-    self.parent = parent
 end
 
 -- draw the collider's bounding box

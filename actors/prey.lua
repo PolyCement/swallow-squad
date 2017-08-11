@@ -126,21 +126,18 @@ function Prey:new(species, x, y)
     -- define the sprite, then use its dimensions to determine collider size
     self.sprite = sprite.Sprite(self.species:getImagePath(), x, y, 1, 1)
     local w, h = self.sprite:getWidth() - 2, self.sprite:getHeight() - 2
-    self.collider = colliders.Trigger(x, y, w, h)
+    self.collider = colliders.Trigger(self, x, y, w, h)
     self.collider:setTag("prey")
-    self.collider:setParent(self)
-    collisionHandler:add(self.collider)
     -- define look trigger
     local look_r = 256
     local look_x, look_y = x + (w / 2) - look_r, y + (h / 2) - look_r
-    self.lookTrigger = colliders.Trigger(look_x, look_y, look_r*2, look_r*2)
+    self.lookTrigger = colliders.Trigger(self, look_x, look_y, look_r*2, look_r*2)
     self.lookTrigger:setCallback(function (colliding_side, obj)
         if obj:getTag() == "player" then
             self:lookAt(obj:getParent():getPos().x)
             self.playerClose = true
         end
     end)
-    collisionHandler:add(self.lookTrigger)
     -- stuff for shouting at the player
     self.speechBubble = SpeechBubble(x+w, y)
     self.playerClose = false
@@ -187,8 +184,8 @@ end
 
 -- remove, called when eaten
 function Prey:remove()
-    collisionHandler:remove(self.collider)
-    collisionHandler:remove(self.lookTrigger)
+    self.collider:remove()
+    self.lookTrigger:remove()
     prey[self] = nil
 end
 
