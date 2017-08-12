@@ -25,7 +25,7 @@ function love.load()
         -- if dt is too big do multiple updates
         local time_left = dt
         while time_left > 0 do
-            dt = math.min(0.05, time_left)
+            dt = math.min(0.01, time_left)
             time_left = time_left - dt
             old_update(dt)
         end
