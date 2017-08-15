@@ -23,8 +23,9 @@ function CollisionHandler:remove(collider)
     self.colliders[collider] = nil
 end
 
--- draw all collision boxes
+-- draw world and all bounding boxes
 function CollisionHandler:draw()
+    self.world.draw()
     for c, _ in pairs(self.colliders) do
         c:drawBoundingBox()
     end
@@ -36,12 +37,11 @@ function CollisionHandler:onGround(collider)
     local w, h = collider.width, collider.height
     local tw, th = self.world.tileWidth, self.world.tileHeight
     local left_col, right_col = math.floor(x / tw), math.floor((x + w) / tw)
-    local bottom_row = math.floor((y + h + NUDGE) / th)
-    -- if we're NUDGE away from a landable surface, we're grounded (i think?)
-    -- don't worry about ramps for now - in theory it shouldn't be possible to walk off em
+    local bottom_row = math.floor((y + h + (NUDGE*2)) / th)
+    -- if we're within 2 NUDGEs of a solid block (should be 1 NUDGE but rounding), we're grounded
     for col = left_col, right_col do
         local current_tile = self.world:getTile(col, bottom_row)
-        if current_tile then
+        if current_tile.collisionType ~= "none" then
             return true
         end
     end
@@ -79,12 +79,12 @@ local function check_world_collision_x(self, collider)
     local tile_x = math.floor(fw_x / tw)
 
     local can_move = true
-    local bottom_row = math.floor((old_y + h) / th) - 2
 
-    -- now check whatever's left
+    -- check all but the bottom 2 rows
     local top_row = math.floor(old_y / th)
+    local bottom_row = math.floor((old_y + h) / th) - 2
     for row = top_row, bottom_row do
-        if self.world:getTile(tile_x, row) then
+        if self.world:getTile(tile_x, row).collisionType ~= "none" then
             can_move = false
             break
         end
@@ -94,32 +94,28 @@ local function check_world_collision_x(self, collider)
     -- special cases on second from bottom row
     local ascending_ramp = false
     if can_move then
-        -- if we're trying to move into a ramp tile on the second row up, and its close edge
-        -- is connected to another ramp (currently inside us), allow movement
+        -- check if we're trying to move into a ramp tile on the second row up,
+        -- and its close edge is connected to another ramp (currently inside us)
         local bottom_tile = self.world:getTile(tile_x, bottom_row)
-        if bottom_tile then
-            if bottom_tile.collisionType == "ramp" then
-                -- get the y at the near edge
-                local near_y = moving_right and bottom_tile.y.left or bottom_tile.y.right
-                -- figure out where to look for a connected ramp tile
-                local connected_row = (near_y == 16) and bottom_row + 1 or bottom_row
-                local connected_col = moving_right and tile_x - 1 or tile_x + 1
-                local connected_tile = self.world:getTile(connected_col, connected_row)
-                if connected_tile and connected_tile.collisionType == "ramp" then
-                    -- get the y of the connected tile at the connecting edge
-                    local connecting_y = moving_right and connected_tile.y.right or connected_tile.y.left
-                    near_y = near_y % th
-                    if connecting_y == near_y then
-                        ascending_ramp = true
-                    else
-                        can_move = false
-                    end
-                else
-                    can_move = false
+        local bottom_col_type = bottom_tile.collisionType
+        if bottom_col_type == "ramp" then
+            -- get the y at the near edge
+            local near_y = moving_right and bottom_tile.y.left or bottom_tile.y.right
+            -- figure out where to look for a connected ramp tile
+            local connected_row = (near_y == 16) and bottom_row + 1 or bottom_row
+            local connected_col = moving_right and tile_x - 1 or tile_x + 1
+            local connected_tile = self.world:getTile(connected_col, connected_row)
+            if connected_tile.collisionType == "ramp" then
+                -- get the y of the connected tile at the connecting edge
+                local connecting_y = moving_right and connected_tile.y.right or connected_tile.y.left
+                near_y = near_y % th
+                if connecting_y == near_y then
+                    ascending_ramp = true
                 end
-            else
-                can_move = false
             end
+        end
+        if bottom_col_type == "block" or (bottom_col_type == "ramp" and not ascending_ramp) then
+            can_move = false
         end
     end
     bottom_row = bottom_row + 1
@@ -129,20 +125,18 @@ local function check_world_collision_x(self, collider)
         local midpoint_col = math.floor((x + w / 2) / tw)
         local midpoint_tile = self.world:getTile(midpoint_col, bottom_row)
         -- if our midpoint is in a ramp, ignore the bottom row altogether
-        if not (midpoint_tile and midpoint_tile.collisionType == "ramp") then
+        if midpoint_tile.collisionType ~= "ramp" then
             -- if the bottom tile is a block, or it's a ramp and the high edge is closest, block
             local bottom_tile = self.world:getTile(tile_x, bottom_row) 
-            if bottom_tile then
-                if bottom_tile.collisionType == "ramp" then
-                    local y_left, y_right = bottom_tile.y.left, bottom_tile.y.right
-                    local rel_y = (old_y + h) % th
-                    if moving_right then
-                        can_move = not (y_left < y_right and rel_y > y_left)
-                    else
-                        can_move = not (y_right < y_left and rel_y > y_right)
-                    end
+            if bottom_tile.collisionType == "block" then
+                can_move = false
+            elseif bottom_tile.collisionType == "ramp" then
+                local y_left, y_right = bottom_tile.y.left, bottom_tile.y.right
+                local rel_y = (old_y + h) % th
+                if moving_right then
+                    can_move = not (y_left < y_right and rel_y > y_left)
                 else
-                    can_move = false
+                    can_move = not (y_right < y_left and rel_y > y_right)
                 end
             end
         end
@@ -174,7 +168,7 @@ local function check_world_collision_y(self, collider)
     -- if we're in a ramp, don't check columns past the high end of the ramp
     -- (we also know the middle tile ain't a block, so skip that too)
     local mid_tile = self.world:getTile(midpoint_col, tile_y)
-    if mid_tile and mid_tile.collisionType == "ramp" then
+    if mid_tile.collisionType == "ramp" then
         if mid_tile.y.left > mid_tile.y.right then
             right_x = midpoint_col - 1
         else
@@ -185,7 +179,7 @@ local function check_world_collision_y(self, collider)
     local can_move = true
     for col = left_x, right_x do
         local current_tile = self.world:getTile(col, tile_y)
-        if current_tile and current_tile.collisionType == "block" then
+        if current_tile.collisionType == "block" then
             can_move = false
             break
         end
@@ -194,7 +188,7 @@ local function check_world_collision_y(self, collider)
     local ramp_y = 0
     if can_move then
         -- if the midpoint is in a ramp, figure out if we need to be moved
-        if mid_tile and mid_tile.collisionType == "ramp" then
+        if mid_tile.collisionType == "ramp" then
             local t = x % tw / tw
             local r_y = math.floor((1 - t) * mid_tile.y.left + t * mid_tile.y.right)
             -- if we're under the ramp, push us up
@@ -216,11 +210,11 @@ local function check_world_collision_y(self, collider)
             if collider:getParent().grounded then
                 local super_mid_tile = self.world:getTile(midpoint_col, tile_y - 1)
                 local sub_mid_tile = self.world:getTile(midpoint_col, tile_y + 1)
-                if super_mid_tile and super_mid_tile.collisionType == "ramp" then
+                if super_mid_tile.collisionType == "ramp" then
                     local t = x % tw / tw
                     local r_y = math.floor((1 - t) * super_mid_tile.y.left + t * super_mid_tile.y.right)
                     return ((tile_y - 1) * th + r_y) - fw_y + NUDGE
-                elseif sub_mid_tile then
+                elseif sub_mid_tile.collisionType ~= "none" then
                     local dist
                     if sub_mid_tile.collisionType == "ramp" then
                         local t = x % tw / tw

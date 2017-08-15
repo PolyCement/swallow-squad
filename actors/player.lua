@@ -260,7 +260,7 @@ function Player:new(x, y)
         self.state:onCollision(colliding_side, obj)
     end)
     self.collider:setTag("player")
-    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 65, 23, w)
+    self.sprite = sprite.AnimatedSprite(130, 152, "assets/images/swallow.png", x, y, 72, 23, w)
     -- register animations
     for i=1, 5 do
         self.sprite:addAnimation("stand" .. i, 9, i, 1)

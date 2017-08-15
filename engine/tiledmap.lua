@@ -27,31 +27,86 @@ local function strip_flip(gid)
     return bit.band(gid, bit.bnot(bit.bor(FLIP_H_FLAG, FLIP_V_FLAG, FLIP_D_FLAG)))
 end
 
--- ok world really needs to be an object
--- only available by calling TiledMap:getWorld()
+-- ideally layer would just have a draw function
+-- but layers dont actually know about tilesets, gids, etc
+local function draw_layer(self, layer)
+    for idx, gid in pairs(layer.data) do
+        -- skip blanks
+        love.graphics.setColor(255, 255, 255, layer.alpha)
+        if gid ~= 0 then
+            -- check for flip bits, then strip em
+            local flipped_h = bit.band(gid, FLIP_H_FLAG) ~= 0
+            local flipped_v = bit.band(gid, FLIP_V_FLAG) ~= 0
+            local flipped_d = bit.band(gid, FLIP_D_FLAG) ~= 0
+            gid = strip_flip(gid)
+            -- grab the tile's quad and its tileset's image
+            local tile_quad = self.tiles[gid].quad
+            local tile_image = self.tiles[gid].tileset.image
+            -- determine draw position
+            local x = ((idx - 1) % self.width) * self.tileWidth
+            local y = math.floor((idx - 1) / self.width) * self.tileHeight
+            local draw_y = y
+            -- handle any potential flips
+            local r, sx, sy = 0, 1, 1
+            sx = flipped_h and -sx or sx
+            sy = flipped_v and -sy or sy
+            if flipped_d then
+                -- to flip anti-diagonally we need to rotate 90 degrees, then flip vertically
+                -- thing is, love.graphics.draw does rotation LAST
+                -- so to compensate, we have to invert sy, then swap sx and sy
+                local old_sx = sx
+                sx = -sy
+                sy = old_sx
+                -- the acrobatics above means we now have to rotate -90 degrees instead
+                r = -math.pi/2
+                -- also there's no way to rotate in place without screwing with draw pos :/
+                y = y + self.tileHeight
+            end
+            -- set offsets
+            local ox = sx > 0 and 0 or self.tileWidth
+            local oy = sy > 0 and 0 or self.tileHeight
+            -- now do a draw
+            love.graphics.draw(tile_image, tile_quad, x, y, r, sx, sy, ox, oy)
+        end
+        love.graphics.setColor(255, 255, 255, 255)
+    end
+end
+
+-- a tile - holds a quad, a reference to its parent tileset, and collision data
+local Tile = Object:extend()
+
+function Tile:new(quad, tileset, raw, props)
+    self.quad = quad
+    self.tileset = tileset
+    self.collisionType = raw and raw.type or "none"
+    if self.collisionType == "ramp" then
+        self.y = {left = props.y_left or 0, right = props.y_right or 0}
+    end
+end
+
 -- takes a map and pulls out all the stuff needed for collisions
 -- NOTE: does NOT handle transforms - it's more trouble than its worth
 -- todo: really not happy about collision and image tiles being the same
--- there's gotta be a way to separate em when loading the map
+-- but separating em any further is gonna be a huge pain
 local World = Object:extend()
 
 function World:new(map)
     self.tileWidth = map.tileWidth
     self.tileHeight = map.tileHeight
-    -- self.world is map.layers.world with tiles subbed in directly
+    -- self.world is map.collisions with tiles subbed in directly
     -- (we can't do this for drawing cos of flips)
-    -- ideally these would be some kind of collision-specific tile rather than
-    -- the all-purpose ones we have now - world really shouldn't know about image stuff
-    -- not to mention how this gives collisionhandler indirect access to tilesets.......
     self.world = {}
-    for idx, gid in pairs(map.layers.world.data) do
+    -- dummy tile for empty spaces
+    local none_tile = Tile()
+    for idx, gid in pairs(map.collisions.data) do
         local x = ((idx - 1) % map.width)
         local y = math.floor((idx - 1) / map.width)
         if not self.world[x] then
             self.world[x] = {}
         end
-        self.world[x][y] = map.tiles[gid]
+        self.world[x][y] = map.tiles[gid] or none_tile
     end
+    self.draw = function () draw_layer(map, map.collisions) end
 end
 
 -- return the tile at the given coordinates
@@ -67,18 +122,6 @@ function Layer:new(raw)
     self.visible = raw.visible
     self.name = raw.name
     self.alpha = raw.opacity * 255
-end
-
--- a tile - holds a quad, a reference to its parent tileset, and collision data
-local Tile = Object:extend()
-
-function Tile:new(quad, tileset, raw, props)
-    self.quad = quad
-    self.tileset = tileset
-    self.collisionType = raw and raw.type or nil
-    if self.collisionType == "ramp" then
-        self.y = {left = props.y_left or 0, right = props.y_right or 0}
-    end
 end
 
 -- shit i guess i gotta parse tilesets too
@@ -126,10 +169,15 @@ function TiledMap:new(map_path)
     -- maybe objects should be kept in layers? i'll figure it out later
     self.layers = {}
     self.objects = {}
+    self.collisions = nil
     for _, raw_layer in pairs(raw.layers) do
         local layer_type = raw_layer.type
         if layer_type == "tilelayer" then
-            self.layers[raw_layer.name] = Layer(raw_layer)
+            if raw_layer.name == "world" then
+                self.collisions = Layer(raw_layer)
+            else
+                self.layers[raw_layer.name] = Layer(raw_layer)
+            end
         elseif layer_type == "objectgroup" then
             for _, obj in pairs(raw_layer.objects) do
                 table.insert(self.objects, obj)
@@ -151,54 +199,9 @@ function TiledMap:new(map_path)
     end
 end
 
--- ideally layer would just have a draw function
--- but layers dont actually know about tilesets, gids, etc
-local function draw_layer(self, layer)
-    for idx, gid in pairs(layer.data) do
-        -- skip blanks
-        love.graphics.setColor(255, 255, 255, layer.alpha)
-        if gid ~= 0 then
-            -- check for flip bits, then strip em
-            local flipped_h = bit.band(gid, FLIP_H_FLAG) ~= 0
-            local flipped_v = bit.band(gid, FLIP_V_FLAG) ~= 0
-            local flipped_d = bit.band(gid, FLIP_D_FLAG) ~= 0
-            gid = strip_flip(gid)
-            -- grab the tile's quad and its tileset's image
-            local tile_quad = self.tiles[gid].quad
-            local tile_image = self.tiles[gid].tileset.image
-            -- determine draw position
-            local x = ((idx - 1) % self.width) * self.tileWidth
-            local y = math.floor((idx - 1) / self.width) * self.tileHeight
-            local draw_y = y
-            -- handle any potential flips
-            local r, sx, sy = 0, 1, 1
-            sx = flipped_h and -sx or sx
-            sy = flipped_v and -sy or sy
-            if flipped_d then
-                -- to flip anti-diagonally we need to rotate 90 degrees, then flip vertically
-                -- thing is, love.graphics.draw does rotation LAST
-                -- so to compensate, we have to invert sy, then swap sx and sy
-                local old_sx = sx
-                sx = -sy
-                sy = old_sx
-                -- the acrobatics above means we now have to rotate -90 degrees instead
-                r = -math.pi/2
-                -- also there's no way to rotate in place without screwing with draw pos :/
-                y = y + self.tileHeight
-            end
-            -- set offsets
-            local ox = sx > 0 and 0 or self.tileWidth
-            local oy = sy > 0 and 0 or self.tileHeight
-            -- now do a draw
-            love.graphics.draw(tile_image, tile_quad, x, y, r, sx, sy, ox, oy)
-        end
-        love.graphics.setColor(255, 255, 255, 255)
-    end
-end
-
 function TiledMap:draw()
     for _, layer in pairs(self.layers) do
-        if layer.visible or (layer.name == "world" and showColliders) then
+        if layer.visible then
             draw_layer(self, layer)
         end
     end
